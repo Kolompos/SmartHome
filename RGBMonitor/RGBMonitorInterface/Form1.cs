@@ -13,12 +13,15 @@ namespace RGBMonitorInterface {
     public partial class Form1 : Form {
 
         private string EEPROMdata;
-        private bool setGUIActive;
+        private bool getDataActive;
+
+        byte command, state, cycleDelay, brightness, sleepbrightness, sleepcycleDelay;
+        long sleepTimeout;
 
         public Form1() {
             InitializeComponent();
             serialPort.Open();
-            setGUI();
+            GetData();
         }
 
         private void trackBar_brightness_MouseUp( object sender, MouseEventArgs e ) {
@@ -43,7 +46,7 @@ namespace RGBMonitorInterface {
         }
 
         private void serialPort_DataReceived( object sender, System.IO.Ports.SerialDataReceivedEventArgs e ) {
-            if( !setGUIActive )
+            if( !getDataActive )
             {
                 Thread.Sleep( 100 );
                 AppendTextBox( serialPort.ReadExisting() );
@@ -60,7 +63,7 @@ namespace RGBMonitorInterface {
                 }
 
                 textBox_received.AppendText( value + Environment.NewLine );
-                if( value.Contains( "to sleep" ) && !setGUIActive )
+                if( value.Contains( "to sleep" ) && !getDataActive )
                 {
                     radioButton_sleep.Checked = true;
                 }
@@ -71,11 +74,15 @@ namespace RGBMonitorInterface {
         private void Send( string val ) {
             serialPort.Write( val );
             textBox_sent.AppendText( val + Environment.NewLine );
+            if( val.Contains( "t" ) )
+            {
+                keepAwake.Interval = Convert.ToInt32( val.Replace( "t", "" ) );
+            }
         }
 
         private void radioButton_status_CheckedChanged( object sender, EventArgs e ) {
             RadioButton rb = sender as RadioButton;
-            if( rb.Checked && !setGUIActive )
+            if( rb.Checked && !getDataActive )
             {
 
                 if( radioButton_olvasolampa.Checked )
@@ -101,11 +108,10 @@ namespace RGBMonitorInterface {
             }
         }
 
-        private void setGUI() {
-            setGUIActive = true;
-
+        private void GetData() {
+            getDataActive = true;
             serialPort.Write( "w" );
-            Thread.Sleep( 200 );
+            Thread.Sleep( 500 );
             EEPROMdata = serialPort.ReadExisting();
             EEPROMdata = EEPROMdata.Replace( "\r", "" );
             string[] lines = EEPROMdata.Split( '\n' );
@@ -116,42 +122,52 @@ namespace RGBMonitorInterface {
             lines[6] = lines[6].Replace( "SlpBright: ", "" );
             lines[7] = lines[7].Replace( "SlpDelay: ", "" );
 
-            switch( lines[2] )
+            state = Convert.ToByte( lines[2] );
+            cycleDelay = Convert.ToByte( lines[3] );
+            brightness = Convert.ToByte( lines[4] );
+            sleepTimeout = Convert.ToInt64( lines[5] );
+            sleepbrightness = Convert.ToByte( lines[6] );
+            sleepcycleDelay = Convert.ToByte( lines[7] );
+
+            setGUI();
+            getDataActive = false;
+        }
+
+        private void setGUI() {
+
+            switch( state )
             {
-                case "0":
+                case 0:
                     radioButton_olvasolampa.Checked = true;
                     break;
-                case "1":
+                case 1:
                     radioButton_lampa.Checked = true;
                     break;
-                case "2":
+                case 2:
                     radioButton_olvasrainbow.Checked = true;
                     break;
-                case "3":
+                case 3:
                     radioButton_wheel.Checked = true;
                     break;
-                case "4":
+                case 4:
                     radioButton_sleep.Checked = true;
                     break;
             }
-            int seged = Convert.ToInt32( lines[3] );
-            trackBar_speed.Value = ( int )( ( 30 - ( double )seged ) * 3.3333333333 );
 
+            //számolás
             //delay = 30 - trackBar_speed.Value / 3.3333333333;
             //-value / 3,3333 = delay - 30
             // value / 3,3333 = 30 - delay
             // value = ( 30 - delay ) * 3,33333
+            trackBar_speed.Value = ( int )( ( 30 - ( double )cycleDelay ) * 3.3333333333 );
 
-            seged = Convert.ToInt32( lines[4] );
-            trackBar_brightness.Value = seged;
+            trackBar_brightness.Value = brightness;
 
+            keepAwake.Interval = (int)sleepTimeout * cycleDelay-5000;
+        }
 
-            /*
-            lines[5];
-            lines[6];
-            lines[7];
-            */
-            setGUIActive = false;
+        private void keepAwake_Tick( object sender, EventArgs e ) {
+            serialPort.Write( "k" );
         }
     }
 }

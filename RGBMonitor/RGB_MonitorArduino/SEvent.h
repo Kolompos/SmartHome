@@ -67,6 +67,8 @@ void serialEvent(){
     Serial.print("Tick: ");
     Serial.println(tickTime);
     return;
+  }else if(command == 'k'){
+    Serial.print("Keeping awake!");
   }
   else{
     Serial.println("No such cmd!");

@@ -42,6 +42,8 @@
             this.button_send = new System.Windows.Forms.Button();
             this.groupBox_radiobuttons = new System.Windows.Forms.GroupBox();
             this.label3 = new System.Windows.Forms.Label();
+            this.keepAwake = new System.Windows.Forms.Timer(this.components);
+            this.timer1 = new System.Windows.Forms.Timer(this.components);
             ((System.ComponentModel.ISupportInitialize)(this.trackBar_brightness)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.trackBar_speed)).BeginInit();
             this.groupBox_radiobuttons.SuspendLayout();
@@ -210,6 +212,12 @@
             this.label3.TabIndex = 14;
             this.label3.Text = "t set timeout to sleep pl: t50000\r\np set sleep brightness\r\ne set sleep speed";
             // 
+            // keepAwake
+            // 
+            this.keepAwake.Enabled = true;
+            this.keepAwake.Interval = 600000;
+            this.keepAwake.Tick += new System.EventHandler(this.keepAwake_Tick);
+            // 
             // Form1
             // 
             this.AcceptButton = this.button_send;
@@ -259,6 +267,8 @@
         private System.Windows.Forms.Button button_send;
         private System.Windows.Forms.GroupBox groupBox_radiobuttons;
         private System.Windows.Forms.Label label3;
+        private System.Windows.Forms.Timer keepAwake;
+        private System.Windows.Forms.Timer timer1;
     }
 }
 
