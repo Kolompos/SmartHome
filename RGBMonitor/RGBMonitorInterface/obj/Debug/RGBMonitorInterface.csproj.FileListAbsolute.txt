@@ -1,0 +1,10 @@
+C:\Users\MeX\source\repos\RGBMonitorInterface\RGBMonitorInterface\bin\Debug\RGBMonitorInterface.exe.config
+C:\Users\MeX\source\repos\RGBMonitorInterface\RGBMonitorInterface\bin\Debug\RGBMonitorInterface.exe
+C:\Users\MeX\source\repos\RGBMonitorInterface\RGBMonitorInterface\bin\Debug\RGBMonitorInterface.pdb
+C:\Users\MeX\source\repos\RGBMonitorInterface\RGBMonitorInterface\obj\Debug\RGBMonitorInterface.csprojAssemblyReference.cache
+C:\Users\MeX\source\repos\RGBMonitorInterface\RGBMonitorInterface\obj\Debug\RGBMonitorInterface.Form1.resources
+C:\Users\MeX\source\repos\RGBMonitorInterface\RGBMonitorInterface\obj\Debug\RGBMonitorInterface.Properties.Resources.resources
+C:\Users\MeX\source\repos\RGBMonitorInterface\RGBMonitorInterface\obj\Debug\RGBMonitorInterface.csproj.GenerateResource.cache
+C:\Users\MeX\source\repos\RGBMonitorInterface\RGBMonitorInterface\obj\Debug\RGBMonitorInterface.csproj.CoreCompileInputs.cache
+C:\Users\MeX\source\repos\RGBMonitorInterface\RGBMonitorInterface\obj\Debug\RGBMonitorInterface.exe
+C:\Users\MeX\source\repos\RGBMonitorInterface\RGBMonitorInterface\obj\Debug\RGBMonitorInterface.pdb
