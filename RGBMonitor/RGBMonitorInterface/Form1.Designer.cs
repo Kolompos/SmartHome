@@ -1,5 +1,5 @@
 ﻿namespace RGBMonitorInterface {
-    partial class Form1 {
+    partial class Form {
         /// <summary>
         /// Required designer variable.
         /// </summary>
@@ -25,7 +25,7 @@
         /// </summary>
         private void InitializeComponent() {
             this.components = new System.ComponentModel.Container();
-            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form1));
+            System.ComponentModel.ComponentResourceManager resources = new System.ComponentModel.ComponentResourceManager(typeof(Form));
             this.trackBar_brightness = new System.Windows.Forms.TrackBar();
             this.radioButton_olvasolampa = new System.Windows.Forms.RadioButton();
             this.radioButton_lampa = new System.Windows.Forms.RadioButton();
@@ -43,10 +43,22 @@
             this.groupBox_radiobuttons = new System.Windows.Forms.GroupBox();
             this.label3 = new System.Windows.Forms.Label();
             this.keepAwake = new System.Windows.Forms.Timer(this.components);
-            this.timer1 = new System.Windows.Forms.Timer(this.components);
+            this.notifyIcon1 = new System.Windows.Forms.NotifyIcon(this.components);
+            this.contextMenuStrip_notificationIcon = new System.Windows.Forms.ContextMenuStrip(this.components);
+            this.closeToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.lightToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.wheelToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.brightnessToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.lowToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.mediumToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.highToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.highestToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.mixedToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
+            this.lowestToolStripMenuItem = new System.Windows.Forms.ToolStripMenuItem();
             ((System.ComponentModel.ISupportInitialize)(this.trackBar_brightness)).BeginInit();
             ((System.ComponentModel.ISupportInitialize)(this.trackBar_speed)).BeginInit();
             this.groupBox_radiobuttons.SuspendLayout();
+            this.contextMenuStrip_notificationIcon.SuspendLayout();
             this.SuspendLayout();
             // 
             // trackBar_brightness
@@ -218,7 +230,102 @@
             this.keepAwake.Interval = 600000;
             this.keepAwake.Tick += new System.EventHandler(this.keepAwake_Tick);
             // 
-            // Form1
+            // notifyIcon1
+            // 
+            this.notifyIcon1.BalloonTipIcon = System.Windows.Forms.ToolTipIcon.Info;
+            this.notifyIcon1.ContextMenuStrip = this.contextMenuStrip_notificationIcon;
+            this.notifyIcon1.Icon = ((System.Drawing.Icon)(resources.GetObject("notifyIcon1.Icon")));
+            this.notifyIcon1.Text = "RGB Controller";
+            this.notifyIcon1.Visible = true;
+            this.notifyIcon1.DoubleClick += new System.EventHandler(this.notifyIcon1_DoubleClick);
+            // 
+            // contextMenuStrip_notificationIcon
+            // 
+            this.contextMenuStrip_notificationIcon.Items.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.brightnessToolStripMenuItem,
+            this.wheelToolStripMenuItem,
+            this.mixedToolStripMenuItem,
+            this.lightToolStripMenuItem,
+            this.closeToolStripMenuItem});
+            this.contextMenuStrip_notificationIcon.Name = "contextMenuStrip_notificationIcon";
+            this.contextMenuStrip_notificationIcon.Size = new System.Drawing.Size(130, 114);
+            // 
+            // closeToolStripMenuItem
+            // 
+            this.closeToolStripMenuItem.Name = "closeToolStripMenuItem";
+            this.closeToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.closeToolStripMenuItem.Text = "Close";
+            this.closeToolStripMenuItem.Click += new System.EventHandler(this.closeToolStripMenuItem_Click);
+            // 
+            // lightToolStripMenuItem
+            // 
+            this.lightToolStripMenuItem.Name = "lightToolStripMenuItem";
+            this.lightToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.lightToolStripMenuItem.Text = "Light";
+            this.lightToolStripMenuItem.Click += new System.EventHandler(this.lightToolStripMenuItem_Click);
+            // 
+            // wheelToolStripMenuItem
+            // 
+            this.wheelToolStripMenuItem.Name = "wheelToolStripMenuItem";
+            this.wheelToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.wheelToolStripMenuItem.Text = "Wheel";
+            this.wheelToolStripMenuItem.Click += new System.EventHandler(this.wheelToolStripMenuItem_Click);
+            // 
+            // brightnessToolStripMenuItem
+            // 
+            this.brightnessToolStripMenuItem.DropDownItems.AddRange(new System.Windows.Forms.ToolStripItem[] {
+            this.highestToolStripMenuItem,
+            this.highToolStripMenuItem,
+            this.mediumToolStripMenuItem,
+            this.lowToolStripMenuItem,
+            this.lowestToolStripMenuItem});
+            this.brightnessToolStripMenuItem.Name = "brightnessToolStripMenuItem";
+            this.brightnessToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.brightnessToolStripMenuItem.Text = "Brightness";
+            // 
+            // lowToolStripMenuItem
+            // 
+            this.lowToolStripMenuItem.Name = "lowToolStripMenuItem";
+            this.lowToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.lowToolStripMenuItem.Text = "Low";
+            this.lowToolStripMenuItem.Click += new System.EventHandler(this.lowToolStripMenuItem_Click);
+            // 
+            // mediumToolStripMenuItem
+            // 
+            this.mediumToolStripMenuItem.Name = "mediumToolStripMenuItem";
+            this.mediumToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.mediumToolStripMenuItem.Text = "Medium";
+            this.mediumToolStripMenuItem.Click += new System.EventHandler(this.mediumToolStripMenuItem_Click);
+            // 
+            // highToolStripMenuItem
+            // 
+            this.highToolStripMenuItem.Name = "highToolStripMenuItem";
+            this.highToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.highToolStripMenuItem.Text = "High";
+            this.highToolStripMenuItem.Click += new System.EventHandler(this.highToolStripMenuItem_Click);
+            // 
+            // highestToolStripMenuItem
+            // 
+            this.highestToolStripMenuItem.Name = "highestToolStripMenuItem";
+            this.highestToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.highestToolStripMenuItem.Text = "Highest";
+            this.highestToolStripMenuItem.Click += new System.EventHandler(this.highestToolStripMenuItem_Click);
+            // 
+            // mixedToolStripMenuItem
+            // 
+            this.mixedToolStripMenuItem.Name = "mixedToolStripMenuItem";
+            this.mixedToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.mixedToolStripMenuItem.Text = "Mixed";
+            this.mixedToolStripMenuItem.Click += new System.EventHandler(this.mixedToolStripMenuItem_Click);
+            // 
+            // lowestToolStripMenuItem
+            // 
+            this.lowestToolStripMenuItem.Name = "lowestToolStripMenuItem";
+            this.lowestToolStripMenuItem.Size = new System.Drawing.Size(180, 22);
+            this.lowestToolStripMenuItem.Text = "Lowest";
+            this.lowestToolStripMenuItem.Click += new System.EventHandler(this.lowestToolStripMenuItem_Click);
+            // 
+            // Form
             // 
             this.AcceptButton = this.button_send;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
@@ -237,13 +344,16 @@
             this.FormBorderStyle = System.Windows.Forms.FormBorderStyle.FixedSingle;
             this.Icon = ((System.Drawing.Icon)(resources.GetObject("$this.Icon")));
             this.MaximizeBox = false;
-            this.Name = "Form1";
+            this.MinimizeBox = false;
+            this.Name = "Form";
             this.Text = "RGB Monitor";
             this.FormClosing += new System.Windows.Forms.FormClosingEventHandler(this.Form1_FormClosing);
+            this.Load += new System.EventHandler(this.Form_Load);
             ((System.ComponentModel.ISupportInitialize)(this.trackBar_brightness)).EndInit();
             ((System.ComponentModel.ISupportInitialize)(this.trackBar_speed)).EndInit();
             this.groupBox_radiobuttons.ResumeLayout(false);
             this.groupBox_radiobuttons.PerformLayout();
+            this.contextMenuStrip_notificationIcon.ResumeLayout(false);
             this.ResumeLayout(false);
             this.PerformLayout();
 
@@ -268,7 +378,18 @@
         private System.Windows.Forms.GroupBox groupBox_radiobuttons;
         private System.Windows.Forms.Label label3;
         private System.Windows.Forms.Timer keepAwake;
-        private System.Windows.Forms.Timer timer1;
+        private System.Windows.Forms.NotifyIcon notifyIcon1;
+        private System.Windows.Forms.ContextMenuStrip contextMenuStrip_notificationIcon;
+        private System.Windows.Forms.ToolStripMenuItem closeToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem lightToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem wheelToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem brightnessToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem lowToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem mediumToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem highToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem highestToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem mixedToolStripMenuItem;
+        private System.Windows.Forms.ToolStripMenuItem lowestToolStripMenuItem;
     }
 }
 

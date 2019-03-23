@@ -10,22 +10,22 @@ using System.Threading.Tasks;
 using System.Windows.Forms;
 
 namespace RGBMonitorInterface {
-    public partial class Form1 : Form {
+    public partial class Form : System.Windows.Forms.Form {
 
         private string EEPROMdata;
-        private bool getDataActive;
+        private bool getDataActive, reallyClose;
 
-        byte command, state, cycleDelay, brightness, sleepbrightness, sleepcycleDelay;
+        byte state, cycleDelay, brightness, sleepbrightness, sleepcycleDelay;
         long sleepTimeout;
 
-        public Form1() {
+        public Form() {
             InitializeComponent();
             serialPort.Open();
             GetData();
         }
 
         private void trackBar_brightness_MouseUp( object sender, MouseEventArgs e ) {
-            serialPort.Write( "b" + trackBar_brightness.Value );
+            setBrightness( trackBar_brightness.Value );
             textBox_sent.AppendText( "b" + trackBar_brightness.Value + Environment.NewLine );
         }
 
@@ -39,10 +39,6 @@ namespace RGBMonitorInterface {
         private void button_send_Click( object sender, EventArgs e ) {
             Send( textBox_send.Text );
             textBox_send.Clear();
-        }
-
-        private void Form1_FormClosing( object sender, FormClosingEventArgs e ) {
-            serialPort.Close();
         }
 
         private void serialPort_DataReceived( object sender, System.IO.Ports.SerialDataReceivedEventArgs e ) {
@@ -69,6 +65,69 @@ namespace RGBMonitorInterface {
                 }
             }
             catch { }
+        }
+
+        private void notifyIcon1_DoubleClick( object sender, EventArgs e ) {
+            this.Show();
+            this.WindowState = FormWindowState.Normal;
+        }
+
+        private void closeToolStripMenuItem_Click( object sender, EventArgs e ) {
+            reallyClose = true;
+            this.Close();
+        }
+
+        private void Form1_FormClosing( object sender, FormClosingEventArgs e ) {
+            if( reallyClose )
+            {
+                serialPort.Close();
+            }
+            else
+            {
+                e.Cancel = true;
+                this.Hide();
+            }
+        }
+
+        private void lightToolStripMenuItem_Click( object sender, EventArgs e ) {
+            this.radioButton_lampa.Checked = true;
+        }
+
+        private void mixedToolStripMenuItem_Click( object sender, EventArgs e ) {
+            this.radioButton_olvasrainbow.Checked = true;
+        }
+
+        private void wheelToolStripMenuItem_Click( object sender, EventArgs e ) {
+            this.radioButton_wheel.Checked = true;
+        }
+
+        private void lowestToolStripMenuItem_Click( object sender, EventArgs e ) {
+            setBrightness( 10 );
+        }
+
+        private void lowToolStripMenuItem_Click( object sender, EventArgs e ) {
+            setBrightness( 70 );
+        }
+
+        private void mediumToolStripMenuItem_Click( object sender, EventArgs e ) {
+            setBrightness( 150 );
+        }
+
+        private void highToolStripMenuItem_Click( object sender, EventArgs e ) {
+            setBrightness( 220 );
+        }
+
+        private void highestToolStripMenuItem_Click( object sender, EventArgs e ) {
+            setBrightness( 255 );
+        }
+
+        private void setBrightness( int value ) {
+            this.trackBar_brightness.Value = value;
+            serialPort.Write( "b" + value );
+        }
+
+        private void Form_Load( object sender, EventArgs e ) {
+            this.Close();
         }
 
         private void Send( string val ) {
@@ -163,7 +222,7 @@ namespace RGBMonitorInterface {
 
             trackBar_brightness.Value = brightness;
 
-            keepAwake.Interval = (int)sleepTimeout * cycleDelay-5000;
+            keepAwake.Interval = ( int )sleepTimeout * cycleDelay - 5000;
         }
 
         private void keepAwake_Tick( object sender, EventArgs e ) {

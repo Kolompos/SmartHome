@@ -51,7 +51,7 @@ void serialEvent(){
     Serial.println("<<<<<<<<<<>>>>>>>>>>");
     Serial.println("EEPROM's data:");
     Serial.print("State: ");
-    Serial.println(EEPROM.read(STATEADDRESS));
+    Serial.println(state);
     Serial.print("Delay: ");
     Serial.println(EEPROM.read(DELAYADDRESS));
     Serial.print("Bright: ");
