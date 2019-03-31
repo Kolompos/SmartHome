@@ -6,5 +6,4 @@ A:\Github\SmartHome\RGBMonitor\RGBMonitorInterface\obj\Release\RGBMonitorInterfa
 A:\Github\SmartHome\RGBMonitor\RGBMonitorInterface\obj\Release\RGBMonitorInterface.csproj.CoreCompileInputs.cache
 A:\Github\SmartHome\RGBMonitor\RGBMonitorInterface\obj\Release\RGBMonitorInterface.exe
 A:\Github\SmartHome\RGBMonitor\RGBMonitorInterface\obj\Release\RGBMonitorInterface.pdb
-A:\Github\SmartHome\RGBMonitor\RGBMonitorInterface\obj\Release\RGBMonitorInterface.csprojAssemblyReference.cache
 A:\Github\SmartHome\RGBMonitor\RGBMonitorInterface\obj\Release\RGBMonitorInterface.Form.resources

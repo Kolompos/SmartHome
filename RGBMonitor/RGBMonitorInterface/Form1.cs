@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.IO.Ports;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -20,7 +21,6 @@ namespace RGBMonitorInterface {
 
         public Form() {
             InitializeComponent();
-            serialPort.Open();
             GetData();
         }
 
@@ -126,7 +126,7 @@ namespace RGBMonitorInterface {
             serialPort.Write( "b" + value );
         }
 
-        private void Form_Load( object sender, EventArgs e ) {
+        private void Form_Shown( object sender, EventArgs e ) {
             this.Close();
         }
 
@@ -169,24 +169,40 @@ namespace RGBMonitorInterface {
 
         private void GetData() {
             getDataActive = true;
-            serialPort.Write( "w" );
-            Thread.Sleep( 500 );
-            EEPROMdata = serialPort.ReadExisting();
-            EEPROMdata = EEPROMdata.Replace( "\r", "" );
-            string[] lines = EEPROMdata.Split( '\n' );
-            lines[2] = lines[2].Replace( "State: ", "" );
-            lines[3] = lines[3].Replace( "Delay: ", "" );
-            lines[4] = lines[4].Replace( "Bright: ", "" );
-            lines[5] = lines[5].Replace( "Timeout: ", "" );
-            lines[6] = lines[6].Replace( "SlpBright: ", "" );
-            lines[7] = lines[7].Replace( "SlpDelay: ", "" );
 
-            state = Convert.ToByte( lines[2] );
-            cycleDelay = Convert.ToByte( lines[3] );
-            brightness = Convert.ToByte( lines[4] );
-            sleepTimeout = Convert.ToInt64( lines[5] );
-            sleepbrightness = Convert.ToByte( lines[6] );
-            sleepcycleDelay = Convert.ToByte( lines[7] );
+            string[] ports = SerialPort.GetPortNames();
+            foreach( string port in ports )
+            {
+                serialPort.PortName = port;
+                serialPort.Open();
+                try
+                {
+                    serialPort.Write( "w" );
+                    Thread.Sleep( 200 );
+                    EEPROMdata = serialPort.ReadExisting();
+                    EEPROMdata = EEPROMdata.Replace( "\r", "" );
+                    string[] lines = EEPROMdata.Split( '\n' );
+                    lines[2] = lines[2].Replace( "State: ", "" );
+                    lines[3] = lines[3].Replace( "Delay: ", "" );
+                    lines[4] = lines[4].Replace( "Bright: ", "" );
+                    lines[5] = lines[5].Replace( "Timeout: ", "" );
+                    lines[6] = lines[6].Replace( "SlpBright: ", "" );
+                    lines[7] = lines[7].Replace( "SlpDelay: ", "" );
+
+                    state = Convert.ToByte( lines[2] );
+                    cycleDelay = Convert.ToByte( lines[3] );
+                    brightness = Convert.ToByte( lines[4] );
+                    sleepTimeout = Convert.ToInt64( lines[5] );
+                    sleepbrightness = Convert.ToByte( lines[6] );
+                    sleepcycleDelay = Convert.ToByte( lines[7] );
+                    break;
+                }
+                catch
+                {
+                    serialPort.Close();
+                    continue;
+                }
+            }
 
             setGUI();
             getDataActive = false;
