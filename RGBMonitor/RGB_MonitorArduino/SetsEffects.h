@@ -52,7 +52,7 @@ void rainbowCycle(byte first, byte last) {
     }
     
     strip.show();
-    if(Serial.available() || interrupted){
+    if(Serial.available()){
       return;
     }
     tickTime++;

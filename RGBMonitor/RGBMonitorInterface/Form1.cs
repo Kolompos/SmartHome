@@ -127,7 +127,7 @@ namespace RGBMonitorInterface {
         }
 
         private void Form_Shown( object sender, EventArgs e ) {
-            this.Close();
+            //this.Close();
         }
 
         private void Send( string val ) {
@@ -237,8 +237,15 @@ namespace RGBMonitorInterface {
             trackBar_speed.Value = ( int )( ( 30 - ( double )cycleDelay ) * 3.3333333333 );
 
             trackBar_brightness.Value = brightness;
-
-            keepAwake.Interval = ( int )sleepTimeout * cycleDelay - 5000;
+            if((int)sleepTimeout * cycleDelay - 5000 > 2000)
+            {
+                keepAwake.Interval = ( int )sleepTimeout * cycleDelay - 5000;
+            }
+            else
+            {
+                keepAwake.Interval = 2000;
+            }
+            
         }
 
         private void keepAwake_Tick( object sender, EventArgs e ) {

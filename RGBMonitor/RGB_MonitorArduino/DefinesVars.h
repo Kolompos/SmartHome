@@ -14,6 +14,5 @@ const long darkgrey = strip.Color(85, 85, 85);
 const long lightgrey = strip.Color(171, 171, 171);
 const long white = strip.Color(255, 255, 255);
       
-bool interrupted;
 byte command, state, cycleDelay, brightness, sleepbrightness, sleepcycleDelay;
 long sleepTimeout, tickTime;

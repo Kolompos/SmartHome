@@ -69,6 +69,7 @@ void serialEvent(){
     return;
   }else if(command == 'k'){
     Serial.print("Keeping awake!");
+    state = EEPROM.read(STATEADDRESS);
   }
   else{
     Serial.println("No such cmd!");

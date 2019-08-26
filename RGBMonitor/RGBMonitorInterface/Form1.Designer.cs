@@ -178,7 +178,7 @@
             this.textBox_sent.Name = "textBox_sent";
             this.textBox_sent.ReadOnly = true;
             this.textBox_sent.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.textBox_sent.Size = new System.Drawing.Size(187, 111);
+            this.textBox_sent.Size = new System.Drawing.Size(187, 228);
             this.textBox_sent.TabIndex = 10;
             // 
             // textBox_received
@@ -188,7 +188,7 @@
             this.textBox_received.Name = "textBox_received";
             this.textBox_received.ReadOnly = true;
             this.textBox_received.ScrollBars = System.Windows.Forms.ScrollBars.Vertical;
-            this.textBox_received.Size = new System.Drawing.Size(259, 111);
+            this.textBox_received.Size = new System.Drawing.Size(259, 228);
             this.textBox_received.TabIndex = 11;
             // 
             // button_send
@@ -330,7 +330,7 @@
             this.AcceptButton = this.button_send;
             this.AutoScaleDimensions = new System.Drawing.SizeF(6F, 13F);
             this.AutoScaleMode = System.Windows.Forms.AutoScaleMode.Font;
-            this.ClientSize = new System.Drawing.Size(501, 361);
+            this.ClientSize = new System.Drawing.Size(501, 464);
             this.Controls.Add(this.label3);
             this.Controls.Add(this.groupBox_radiobuttons);
             this.Controls.Add(this.button_send);

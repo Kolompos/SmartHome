@@ -7,3 +7,13 @@ A:\Github\SmartHome\RGBMonitor\RGBMonitorInterface\obj\Release\RGBMonitorInterfa
 A:\Github\SmartHome\RGBMonitor\RGBMonitorInterface\obj\Release\RGBMonitorInterface.exe
 A:\Github\SmartHome\RGBMonitor\RGBMonitorInterface\obj\Release\RGBMonitorInterface.pdb
 A:\Github\SmartHome\RGBMonitor\RGBMonitorInterface\obj\Release\RGBMonitorInterface.Form.resources
+D:\Sources\Gits\SmartHome\RGBMonitor\RGBMonitorInterface\bin\Release\RGBMonitorInterface.exe.config
+D:\Sources\Gits\SmartHome\RGBMonitor\RGBMonitorInterface\bin\Release\RGBMonitorInterface.exe
+D:\Sources\Gits\SmartHome\RGBMonitor\RGBMonitorInterface\bin\Release\RGBMonitorInterface.pdb
+D:\Sources\Gits\SmartHome\RGBMonitor\RGBMonitorInterface\obj\Release\RGBMonitorInterface.csprojAssemblyReference.cache
+D:\Sources\Gits\SmartHome\RGBMonitor\RGBMonitorInterface\obj\Release\RGBMonitorInterface.Form.resources
+D:\Sources\Gits\SmartHome\RGBMonitor\RGBMonitorInterface\obj\Release\RGBMonitorInterface.Properties.Resources.resources
+D:\Sources\Gits\SmartHome\RGBMonitor\RGBMonitorInterface\obj\Release\RGBMonitorInterface.csproj.GenerateResource.cache
+D:\Sources\Gits\SmartHome\RGBMonitor\RGBMonitorInterface\obj\Release\RGBMonitorInterface.csproj.CoreCompileInputs.cache
+D:\Sources\Gits\SmartHome\RGBMonitor\RGBMonitorInterface\obj\Release\RGBMonitorInterface.exe
+D:\Sources\Gits\SmartHome\RGBMonitor\RGBMonitorInterface\obj\Release\RGBMonitorInterface.pdb

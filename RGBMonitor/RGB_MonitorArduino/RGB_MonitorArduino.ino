@@ -68,7 +68,7 @@ void loop() {
       setBottom(255,255,255);
       strip.show();
       while(true){
-        if(Serial.available() || interrupted)
+        if(Serial.available())
           return;
         tickTime++;
         delay(cycleDelay);
@@ -82,7 +82,7 @@ void loop() {
       setAll(255,255,255);
       strip.show();
       while(true){
-        if(Serial.available() || interrupted)
+        if(Serial.available())
           return;
         tickTime++;
         delay(cycleDelay);
@@ -94,14 +94,14 @@ void loop() {
       break;
     case 2:
       setBottom(255,255,255);
-      while(!(Serial.available() || interrupted)){
+      while(!(Serial.available())){
         rainbowCycle(15,45);
         if(state == 4)
           return;
       }
       break;
     case 3:
-      while(!(Serial.available() || interrupted)){
+      while(!(Serial.available())){
         rainbowCycle(0,NUM_LEDS);
         if(state == 4)
           return;
@@ -116,7 +116,7 @@ void loop() {
         for(i = 0; i < 60; i++){
           sleepEffect(i);
           delay(sleepcycleDelay);
-          if(Serial.available() || interrupted){
+          if(Serial.available()){
             return;
           }
         }
