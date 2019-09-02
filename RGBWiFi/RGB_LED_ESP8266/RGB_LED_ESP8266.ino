@@ -22,7 +22,7 @@ NTPClient timeClient(ntpUDP, "europe.pool.ntp.org", 7200, 60000);
 // requires support on windows 10 which is not state of the art yet...
 //#define MDNS_ADDRESS "ESPI"
 
-#define HEARTBEAT_PERIOD 120000 // in ms
+//#define HEARTBEAT_PERIOD 120000 // in ms - All of a sudden started causing CPU crash after implementing EEPROM read on startup:/
 #ifdef HEARTBEAT_PERIOD
   uint32_t timer;
 #endif
@@ -31,6 +31,11 @@ NTPClient timeClient(ntpUDP, "europe.pool.ntp.org", 7200, 60000);
 #define RETAIN_COMMAND_FOR              86400   // in seconds
 #define LAST_COMMAND_EPOCH_ADDRESS      0
 #define EFFECT_ADDRESS                  4
+#define COLOR_ADDRESS                   5
+#define SPEED_ADDRESS                   9
+#define BRIGHTNESS_ADDRESS              10
+#define OFFSET_TO_NEXT_STRIP_DATA       10
+
 
 // ------------------------------------------------------------------------------------------ VARIABLES
 
@@ -40,19 +45,15 @@ const uint16_t LOGO_LED_COUNT = 14;
 const uint8_t FRAME_PIN = D3;
 const uint16_t FRAME_LED_COUNT = 104;
 
-uint32_t epochTick,lastCommandEpochTick;
-uint8_t epochDay;
-uint8_t epochHour;
-uint8_t epochMinute;
-uint8_t epochSecond;
+uint32_t lastCommandEpochTick;
+
+bool isCommandValid;
 
 // ------------------------------------------------------------------------------------------ OWN SOURCE FILES
 #include "Strip.h"
+Strip stripLogo(LOGO_PIN, LOGO_LED_COUNT, 0);
+Strip stripFrame(FRAME_PIN, FRAME_LED_COUNT, 1);
 #include "Handles.h"
-
-Strip stripLogo(LOGO_PIN, LOGO_LED_COUNT, "LOGO");
-Strip stripFrame(FRAME_PIN, FRAME_LED_COUNT, "FRAME");
-
 
 // ------------------------------------------------------------------------------------------ FUNCTIONS
 uint16_t getArgValue(String name)
@@ -105,31 +106,30 @@ void setup(void)
   server.begin();
   Serial.println("HTTP server started");
   timeClient.begin();
-  
-  // ------------------------------ TIME
-  epochTick = timeClient.getEpochTime();
-  epochDay = timeClient.getDay();
-  epochHour = timeClient.getHours();
-  epochMinute = timeClient.getMinutes();
-  epochSecond = timeClient.getSeconds();
+  timeClient.update();
 
   // ------------------------------ EEPROM
   lastCommandEpochTick = EEPROMRead_uint32_t(LAST_COMMAND_EPOCH_ADDRESS);
-  if(lastCommandEpochTick + RETAIN_COMMAND_FOR < epochTick)
+  
+  if(lastCommandEpochTick + RETAIN_COMMAND_FOR > timeClient.getEpochTime())
   {
-    // HTTP GET if data is valid
-    //String link = "" + WiFi.localIP();
-    //link += "/index.html?LR=100&LG=255&LB=20";
-    //httpClient.begin(link);
-    //httpClient.end();
+    // if command is valid
+    isCommandValid = true;
+    // load last command's parameters
+    // TODO: create function in strip class that does EEPROM reads.
+    stripLogo.setEffect(EEPROM.read(stripLogo.indexOfThisStrip * OFFSET_TO_NEXT_STRIP_DATA + EFFECT_ADDRESS));
+    stripLogo.setColor(EEPROMRead_uint32_t(stripLogo.indexOfThisStrip * OFFSET_TO_NEXT_STRIP_DATA + COLOR_ADDRESS));
+    stripLogo.setSpeed(EEPROM.read(stripLogo.indexOfThisStrip * OFFSET_TO_NEXT_STRIP_DATA + SPEED_ADDRESS));
+    stripLogo.setBrightness(EEPROM.read(stripLogo.indexOfThisStrip * OFFSET_TO_NEXT_STRIP_DATA + BRIGHTNESS_ADDRESS));
+    Serial.println("LOADED VALUES FROM EEPROM");
   }
   else
   {
     // use default values since last command is now invalid
+    // TODO: create function in strip class that sets default values.
+    stripLogo.setEffect(0);
+    stripLogo.setColor(0);
   }
-
-  
-  
 }
 
 // ------------------------------------------------------------------------------------------ LOOP

@@ -8,6 +8,7 @@ void EEPROMWrite_uint32_t(uint8_t address, uint32_t value){
   EEPROM.write(address + 1, three);
   EEPROM.write(address + 2, two);
   EEPROM.write(address + 3, one);
+  EEPROM.commit();
 }
 
 uint32_t EEPROMRead_uint32_t(uint8_t address){

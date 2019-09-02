@@ -70,15 +70,7 @@ function padZero(str, len) {
 }
 
 function logoButtonClick(){
-	var nextURL;
-	if(document.URL.indexOf('?') > -1)
-	{
-		nextURL = document.URL.substring(0, document.URL.indexOf('?'));
-	}
-	else
-	{
-		nextURL = document.URL;
-	}
+	var nextURL = "/command"
 	nextURL += "?LR=" + sliderlogoRedRange.value + "&LG=" + sliderlogoGreenRange.value + "&LB=" + sliderlogoBlueRange.value + "&LE=" + getSelectedButton("logo");
 	console.log(nextURL);
 	window.location.href = nextURL;

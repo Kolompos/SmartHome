@@ -3,17 +3,47 @@
 // ------------------------------------------------------------------------------------------ FUNCTIONS
 String getContentType(String filename) { // convert the file extension to the MIME type
   if (filename.endsWith(".html")) return "text/html";
+  // TODO: add compressed formats as well. readmore: https://tttapa.github.io/ESP8266/Chap11%20-%20SPIFFS.html
   else if (filename.endsWith(".css")) return "text/css";
   else if (filename.endsWith(".js")) return "application/javascript";
   else if (filename.endsWith(".ico")) return "image/x-icon";
   return "text/plain";
 }
 
-bool handleFileRead(String path) { // send the right file to the client (if it exists)
+bool handleFileRead(String path, bool hasArgs)                        // send the right file to the client (if it exists)
+{
+  if(lastCommandEpochTick + RETAIN_COMMAND_FOR > timeClient.getEpochTime())
+    isCommandValid = true;
+  else
+    isCommandValid = false;
+    
   Serial.println("handleFileRead: " + path);
-  if (path.endsWith("/")) path += "index.html";         // If a folder is requested, send the index file
+  if (path.endsWith("/"))
+  {
+    path += "index.html";                               // If a folder is requested, send the index file
+  }
+  
+  // this redirects us to the parametered index page if the data is valid and there are no args already
+  if(isCommandValid && !hasArgs && path.endsWith("index.html"))
+  {
+    // TODO: this will be unbearable later on, do something with this... make a getUrlCode() function or someting
+    String url = "/index.html?LR=";
+    url += stripLogo.getColor(R);
+    url += "&LG=";
+    url += stripLogo.getColor(G);
+    url += "&LB=";
+    url += stripLogo.getColor(B);
+    url += "&LE=";
+    url += stripLogo.getEffect();
+    
+    server.sendHeader("Location", url, true);
+    server.send ( 302, "text/plain", "");
+    return true;
+  }
+  
   String contentType = getContentType(path);            // Get the MIME type
-  if (SPIFFS.exists(path)) {                            // If the file exists
+  if (SPIFFS.exists(path))                              // If the file exists
+  {                            
     File file = SPIFFS.open(path, "r");                 // Open it
     size_t sent = server.streamFile(file, contentType); // And send it to the client
     file.close();                                       // Then close the file again
@@ -25,20 +55,29 @@ bool handleFileRead(String path) { // send the right file to the client (if it e
 
 // ------------------------------------------------------------------------------------------ HANDLES
 void handleCommand() {
-  String message = "<html><head></head><body style='font-family: sans-serif; font-size: 12px'>Following functions are available for the logo logo:<br><br>";
-  message += "<a href='/logo/rainbow?fade=3000'>/rainbow</a> a rainbow animation on the logo.<br>";
-  message += "<a href='/logo/wave?r=255&g=255&b=255&fade=5000'>/wave</a> a slow wave animation on LED on base color specified by arguments: r=<0..255> g=<0..255> b=<0..255><br>";
-  message += "<a href='/logo/setleds?r=255&g=255&b=255&fade=1000'>/setleds</a> sets LEDs to the color from arguments: r=<0..255> g=<0..255> b=<0..255><br>";
-  message += "<a href='/logo/off?fade=500'>/off.</a> turn the logo's LEDs off.<br>";
-  message += "All functions support the argument 'fade' which specifies the milliseconds it takes to fade to the new specified state.<br>";
-  message += "<br>Syntax is as follows: http://&ltip>/&ltcommand>?&ltargument1>=&ltvalue1>&&ltargument2>=&ltvalue2>&...<br>";
-  message += "You can click on each link to see an example.<br><br>";
-  message += "Go back to <a href='/'>root</a>.<br></body></html>";
+  // save last time data was sent to ESP
+  timeClient.update();
+  EEPROMWrite_uint32_t(LAST_COMMAND_EPOCH_ADDRESS,timeClient.getEpochTime());
+
+  // TODO: make a function in strip class that gets the args and sets itself
+  // TODO: also make an API or at least make a little bit fool proof the command syntax and parameter order
+  stripLogo.setColor(server.arg(0).toInt(),server.arg(1).toInt(),server.arg(2).toInt());
+  stripLogo.setEffect(server.arg(3).toInt());
+  
+  EEPROM.commit();
+  
+  String message = "<html><head></head><body style='font-family: sans-serif; font-size: 12px' onload=\"onLoadFunction()\">";
+
+  message += "Redirecting to previous page in 2 sec.";
+  // this is a html code that auto executes on load of the page and calls another function delayed by  V this value, that redirects us to the previous page.
+  message += "<script>function onLoadFunction(){setTimeout(function(){ window.location.href=\"/\";}, 2000); } </script>";
+  
+  message += "</body></html>";
   server.send(200, "text/html", message);
 }
 
 void handleNotFound() {
-  if (!handleFileRead(server.uri()))
+  if (!handleFileRead(server.uri(), server.args()?true:false))
   {
     String message = "Command Not Found\n\n";
     message += "URI: ";
