@@ -36,6 +36,7 @@ class Strip
     Strip(uint8_t _pinNumber, uint16_t _ledChipCount, uint8_t _indexOfThisStrip)
     {
       adafruitStrip = Adafruit_NeoPixel(_ledChipCount, (uint16_t)_pinNumber, NEO_GRB + NEO_KHZ800);
+      ledChipCount = _ledChipCount;
       indexOfThisStrip = _indexOfThisStrip;
       currentRGBValues = new uint8_t*[3];
       for(uint8_t i = 0; i < 3; ++i)
@@ -77,8 +78,7 @@ class Strip
             adafruitStrip.show();
             break; 
           case RAINBOW:
-			RenderRainbow();
-            adafruitStrip.show();
+            renderRainbow();
             break; 
           case WAVE:
             // TODO: implement
@@ -86,23 +86,26 @@ class Strip
             break;
           
         }
+        delay(50);
       }
     }
 
-	void RenderRainbow()
-	{
-		uint8_t j = (millis() >> 4) & 255;
-		for(uint16_t i = 0; i < ledChipCount; i++)
-		{
-		  uint8_t ij = 255 - ((i + j) & 255);
-		  if(ij < 85)
-			setPixel(i, 255 - ij * 3, 0, ij * 3);
-		  else if(ij < 170)
-			setPixel(i, 0, (ij - 85) * 3, 255 - (ij - 85) * 3);
-		  else
-			setPixel(i, (ij -170) * 3, 255 - (ij -170) * 3, 0);
-		}
-	}
+    void renderRainbow()
+    {
+    	uint8_t j = (millis() >> 4) & 255;
+      uint8_t ij;
+    	for(uint16_t i = 0; i < ledChipCount; i++)
+    	{
+    	  ij = 255 - ((i + j) & 255);
+    	  if(ij < 85)
+    		adafruitStrip.setPixelColor(i, 255 - ij * 3, 0, ij * 3);
+    	  else if(ij < 170)
+    		adafruitStrip.setPixelColor(i, 0, (ij - 85) * 3, 255 - (ij - 85) * 3);
+    	  else
+    		adafruitStrip.setPixelColor(i, (ij -170) * 3, 255 - (ij -170) * 3, 0);
+    	}
+      adafruitStrip.show();
+    }
 	
     void setEffect(uint8_t _effect)
     {
