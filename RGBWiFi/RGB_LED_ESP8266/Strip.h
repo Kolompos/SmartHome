@@ -77,7 +77,7 @@ class Strip
             adafruitStrip.show();
             break; 
           case RAINBOW:
-            // TODO: implement
+			RenderRainbow();
             adafruitStrip.show();
             break; 
           case WAVE:
@@ -89,6 +89,21 @@ class Strip
       }
     }
 
+	void RenderRainbow()
+	{
+		uint8_t j = (millis() >> 4) & 255;
+		for(uint16_t i = 0; i < ledChipCount; i++)
+		{
+		  uint8_t ij = 255 - ((i + j) & 255);
+		  if(ij < 85)
+			setPixel(i, 255 - ij * 3, 0, ij * 3);
+		  else if(ij < 170)
+			setPixel(i, 0, (ij - 85) * 3, 255 - (ij - 85) * 3);
+		  else
+			setPixel(i, (ij -170) * 3, 255 - (ij -170) * 3, 0);
+		}
+	}
+	
     void setEffect(uint8_t _effect)
     {
       effectCode = _effect;
