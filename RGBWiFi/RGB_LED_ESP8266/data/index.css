@@ -1,5 +1,15 @@
+#allDiv{
+	width: 100%;
+	padding: 1% 1%;
+	background: #dddddd;
+	border-radius: 15px;
+	
+}
 .functionDiv {
-  width: 90%; /* Width of the outside container */
+	margin: 15px 15px;
+	padding: 10px 10px;
+	background: #bbbbbb;
+	border-radius: 10px;
 }
 
 /* The slider itself */
@@ -7,11 +17,13 @@
 	-webkit-appearance: none;  /* Override default CSS styles */
 	appearance: none;
 	width: 100%; /* Full-width */
-	height: 25px; /* Specified height */
+	height: 45px; /* Specified height */
 	outline: none; /* Remove outline */
 	opacity: 0.8; /* Set transparency (for mouse-over effects on hover) */
 	-webkit-transition: .2s; /* 0.2 seconds transition on hover */
 	transition: opacity .2s;
+	cursor: pointer;
+	border-radius: 5px;
 }
 .red {
 	background: #ff0000; /* Red background */
@@ -32,17 +44,18 @@
 .slider::-webkit-slider-thumb {
 	-webkit-appearance: none; /* Override default look */
 	appearance: none;
-	width: 25px; /* Set a specific slider handle width */
-	height: 25px; /* Slider handle height */
-	background: #aaaaaa; /* Green background */
+	width: 30px; /* Set a specific slider handle width */
+	height: 40px; /* Slider handle height */
+	background: #aaaaaa; /* grey background */
 	cursor: pointer; /* Cursor on hover */
-	border-radius: 25px; /* Round handle*/
+	border-radius: 35px; /* Round handle*/
+	border: 2px solid #666666;
 }
 
 .slider::-moz-range-thumb {
 	width: 25px; /* Set a specific slider handle width */
 	height: 25px; /* Slider handle height */
-	background: #aaaaaa; /* Green background */
+	background: #aaaaaa; /* grey background */
 	cursor: pointer; /* Cursor on hover */
 	border-radius: 25px; /* Round handle*/
 }
@@ -51,17 +64,56 @@
 	width: 100%;
 	border: none;
 	color: white;
-	padding: 15px 25px;
+	text-shadow: -2px 0 black, 0 2px black, 2px 0 black, 0 -1px black;
+	padding: 2px 20px;
 	text-align: center;
-	font-size: 16px;
+	font-size: 40px;
+	font-weight: bold;
 	cursor: pointer;
 	opacity: 0.8; /* Set transparency (for mouse-over effects on hover) */
+	border-radius: 5px;
 }
 
 .button:hover {
 	opacity: 1; /* Fully shown on mouse-over */
 }
 
+input[type="radio"] {
+  margin-top: -4px;
+  vertical-align: middle;
+}
+
 .radioContainer{
+	width: 100%
+	height: 20px;
+	overflow: auto;
 	text-align: center;
+	border: none;
+	color: black;
+	padding: 10px 10px;
+	font-size: 35px;
+	font-weight: bold;
+}
+
+.label{
+	background-color: #999999;
+	padding: 5px 20px;
+	cursor: pointer;
+	border-radius: 5px;
+	display: inline-block;
+	text-shadow: 0 2px #aaaaaa, 2px 0 #aaaaaa;
+	margin: 4px 2px;
+}
+
+.label:hover{
+	background-color: #000;
+	color: white;
+	
+}
+
+#buttonAll{
+	width: 98%;
+	background: #bbbbbb; /* grey background */
+	margin: 1px 15px;
+	border-radius: 10px;
 }

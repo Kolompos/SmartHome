@@ -1,7 +1,6 @@
 #include <ESP8266WiFi.h>
 #include <WiFiClient.h>
 #include <ESP8266WebServer.h>
-//#include <ESP8266HTTPClient.h>
 #include <ESP8266mDNS.h>
 #include <EEPROM.h>
 #include "EEPROMstuff.h"
@@ -11,14 +10,12 @@
 
 // ------------------------------------------------------------------------------------------ OBJECTS
 ESP8266WebServer server(80);
-//HTTPClient httpClient;
 WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP, "europe.pool.ntp.org", 7200, 60000);
+NTPClient timeClient(ntpUDP, "europe.pool.ntp.org", 7200, 60000);     // protocol, poolServerName, timeOffset in seconds, updateInterval in millis
 
 // ------------------------------------------------------------------------------------------ DEFINES
 #define WIFI_SSID "Mha Hart Mah Sole"
 //#define WIFI_PW  "aezakmi123"
-
 // requires support on windows 10 which is not state of the art yet...
 //#define MDNS_ADDRESS "ESPI"
 
@@ -36,33 +33,24 @@ NTPClient timeClient(ntpUDP, "europe.pool.ntp.org", 7200, 60000);
 #define BRIGHTNESS_ADDRESS              10
 #define OFFSET_TO_NEXT_STRIP_DATA       10
 
+// strips settings
+#define NUMBER_OF_STRIPS                2
+
+#define LOGO_PIN                        D4
+#define LOGO_LED_COUNT                  14
+
+#define FRAME_PIN                       D3
+#define FRAME_LED_COUNT                 104
 
 // ------------------------------------------------------------------------------------------ VARIABLES
-
-const uint8_t LOGO_PIN = D4;
-const uint16_t LOGO_LED_COUNT = 14;
-
-const uint8_t FRAME_PIN = D3;
-const uint16_t FRAME_LED_COUNT = 104;
-
-uint32_t lastCommandEpochTick;
+uint32_t lastCommandEpochTick, seedGlobal;
 
 bool isCommandValid;
 
 // ------------------------------------------------------------------------------------------ OWN SOURCE FILES
 #include "Strip.h"
-Strip stripLogo(LOGO_PIN, LOGO_LED_COUNT, 0);
-Strip stripFrame(FRAME_PIN, FRAME_LED_COUNT, 1);
+Strip strips[NUMBER_OF_STRIPS] = { { LOGO_PIN,LOGO_LED_COUNT,0 } , { FRAME_PIN,FRAME_LED_COUNT,1 } };
 #include "Handles.h"
-
-// ------------------------------------------------------------------------------------------ FUNCTIONS
-uint16_t getArgValue(String name)
-{
-  for (uint8_t i = 0; i < server.args(); i++)
-    if (server.argName(i) == name)
-      return server.arg(i).toInt();
-  return -1;
-}
 
 // ------------------------------------------------------------------------------------------ SETUP
 void setup(void) 
@@ -106,29 +94,28 @@ void setup(void)
   server.begin();
   Serial.println("HTTP server started");
   timeClient.begin();
-  timeClient.update();
+  timeClient.forceUpdate();
 
   // ------------------------------ EEPROM
   lastCommandEpochTick = EEPROMRead_uint32_t(LAST_COMMAND_EPOCH_ADDRESS);
-  
   if(lastCommandEpochTick + RETAIN_COMMAND_FOR > timeClient.getEpochTime())
   {
     // if command is valid
     isCommandValid = true;
     // load last command's parameters
-    // TODO: create function in strip class that does EEPROM reads.
-    stripLogo.setEffect(EEPROM.read(stripLogo.indexOfThisStrip * OFFSET_TO_NEXT_STRIP_DATA + EFFECT_ADDRESS));
-    stripLogo.setColor(EEPROMRead_uint32_t(stripLogo.indexOfThisStrip * OFFSET_TO_NEXT_STRIP_DATA + COLOR_ADDRESS));
-    stripLogo.setSpeed(EEPROM.read(stripLogo.indexOfThisStrip * OFFSET_TO_NEXT_STRIP_DATA + SPEED_ADDRESS));
-    stripLogo.setBrightness(EEPROM.read(stripLogo.indexOfThisStrip * OFFSET_TO_NEXT_STRIP_DATA + BRIGHTNESS_ADDRESS));
-    Serial.println("LOADED VALUES FROM EEPROM");
+    for(uint8_t index = 0; index < NUMBER_OF_STRIPS; index++)
+    {
+      strips[index].loadConfigFromEEPROM();
+    }
   }
   else
   {
     // use default values since last command is now invalid
-    // TODO: create function in strip class that sets default values.
-    stripLogo.setEffect(0);
-    stripLogo.setColor(0);
+    for(uint8_t index = 0; index < NUMBER_OF_STRIPS; index++)
+    {
+      strips[index].setDefaultConfig();
+    }
+
   }
 }
 
@@ -141,8 +128,13 @@ void loop(void)
   
   server.handleClient();
   timeClient.update();
+
+  seedGlobal = micros();
   
-  stripLogo.render();
+  for(uint8_t index = 0; index < NUMBER_OF_STRIPS; index++)
+  {
+    strips[index].render(seedGlobal);
+  }
 
   // ------------------------------ DEBUG AND MAINTENANCE
   if (Serial.available())
@@ -159,30 +151,27 @@ void loop(void)
       Serial.print("Time from NTP server: ");
       Serial.println(timeClient.getFormattedTime());
     }
-    else if (command == (uint8_t)'t')
+    else if (command == (uint8_t)'u')
     {
-      Serial.print("Ellapsed minutes since boot: ");
-      Serial.println(millis()/60000);
-      Serial.print("Time from NTP server: ");
-      Serial.println(timeClient.getFormattedTime());
-    }
-    else if (command == (uint8_t)'s')
-    {
-      stripLogo.setColor(200,200,200);
-      stripLogo.setEffect(1);
-      Serial.println("Effect 1 set");
-    }
-    else if (command == (uint8_t)'o')
-    {
-      stripLogo.setEffect(0);
-      Serial.println("Effect 0 set");
+      for(uint8_t index = 0; index < NUMBER_OF_STRIPS; index++)
+      {
+        Serial.print("Strip number ");
+        Serial.print(index);
+        Serial.print("'s URL is ");
+        Serial.println(strips[index].getConfigAsURL());
+      }
     }
     else if (command == (uint8_t)'b')
     {
-      stripLogo.setEffect(2);
-      stripLogo.setColor(200,200,200);
-      Serial.println("Effect 2 set");
+      for(uint8_t index = 0; index < NUMBER_OF_STRIPS; index++)
+      {
+        Serial.print("Strip number ");
+        Serial.print(index);
+        Serial.print("'s renderable is  ");
+        Serial.println(strips[index].renderable);
+      }
     }
+    
   }
   
   #ifdef HEARTBEAT_PERIOD

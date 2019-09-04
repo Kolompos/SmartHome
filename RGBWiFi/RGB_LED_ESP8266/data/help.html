@@ -1,13 +1,18 @@
 <html>
 	<head></head>
 	<body style='font-family: sans-serif; font-size: 12px'>
-		<a href='/rainbow?fade=3000'>/rainbow</a> a rainbow animation on LEDs<br>
-		<a href='/wave?r=255&g=32&b=10&fade=5000'>/wave</a> a slow wave animation on LED on base color specified by arguments: r=<0..255> g=<0..255> b=<0..255><br>
-		<a href='/setleds?r=32&g=64&b=32&fade=1000'>/setleds</a> sets LEDs to the color from arguments: r=<0..255> g=<0..255> b=<0..255><br>
-		<a href='/ledsoff?fade=500'>/ledsoff</a> turns off LEDs<br>
-		<a href='/setpins?D1=128&D2=256&D3=512'>/setpins</a> sets to any of the in arguments specified pins (D0..D8) to their PWM values (0..1023). To use them digital: 0=off, 1023=on<br>
-		<a href='/togglepins'>/togglepins</a> inverts all pin values form pins used before.<br>
-		<a href='/rf?D=6&t=200&id=28013&channel=0&on=1'>/rf</a> sends a rf code from arguments: D=<0..8> t=<0..1000> id=<0..1048575> channel=<0..2> on=<0..1>. Dx is the pin, t is the optional signal clock(default is 200, works for me)<br><br>
-		Syntax is as follows: http://&ltip>/&ltcommand>?&ltargument1>=&ltvalue1>&&ltargument2>=&ltvalue2>&...<br>
+		URL command syntax helper:<br>
+		ESPIP/command?1=1&2=200&3=100&4=150&5=150&6=150&7=150&11=0<br>
+		Meaning: set 1st strip to STATIC, set parameters to 200 100 150 RGB to 150 150 150 and set 2nd strip to OFF<br>
+		#define URL_INDEX_OF_EFFECT             1<br>
+		#define URL_INDEX_OF_SPEED              2<br>
+		#define URL_INDEX_OF_BRIGHTNESS         3<br><br>
+
+		#define URL_INDEX_OF_R                  5<br>
+		#define URL_INDEX_OF_G                  6<br>
+		#define URL_INDEX_OF_B                  7<br>
+		#define URL_OFFSET_TO_NEXT_STRIP        10<br>
+		<a href='/command?1=1&2=200&3=100&4=150&5=150&6=150&7=150'>Link</a> to an example.
+		<a href='/index.hmtl'>Link</a> to control panel.
 	</body>
 </html>

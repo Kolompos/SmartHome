@@ -2,16 +2,27 @@
 
 // ------------------------------------------------------------------------------------------ DEFINES
 // EFFECT CODES
-#define OFF       0
-#define STATIC    1
-#define BREATHE   2
-#define RAINBOW   3
-#define WAVE      4
+#define OFF           0
+#define STATIC        1
+#define BREATHE       2
+#define ANTIBREATHE   3
+#define RAINBOW       4
+#define WAVE          5
+#define METEOR        6
 
 // COLORS
 #define R   0
 #define G   1
 #define B   2
+
+#define URL_INDEX_OF_EFFECT             1
+#define URL_INDEX_OF_SPEED              2
+#define URL_INDEX_OF_BRIGHTNESS         3
+
+#define URL_INDEX_OF_R                  5
+#define URL_INDEX_OF_G                  6
+#define URL_INDEX_OF_B                  7
+#define URL_OFFSET_TO_NEXT_STRIP        10
 
 // ------------------------------------------------------------------------------------------ CLASS
 // TODO: add fade effect https://github.com/bitluni/bitluniHomeAutomation/blob/master/Fader.h
@@ -19,19 +30,7 @@ class Strip
 {
   public:
     // ------------------------------ VARIABLES
-    uint8_t indexOfThisStrip;
-    uint16_t ledChipCount;
-    // a reference for a strip
-    Adafruit_NeoPixel adafruitStrip;
-    uint8_t** currentRGBValues;
 
-    uint8_t effectCode;
-    uint8_t effectSpeed;
-    uint8_t effectBrightness;
-    uint32_t effectColor;
-
-    // ------------------------------ CONSTS
-    
     // ------------------------------ FUNCTIONS
     Strip(uint8_t _pinNumber, uint16_t _ledChipCount, uint8_t _indexOfThisStrip)
     {
@@ -53,10 +52,11 @@ class Strip
       delete currentRGBValues;
     }
     
-    void render()
+    void render(uint32_t _seed)
     {
       if(renderable)
       {
+        _seed /= effectDelay ;
         switch(effectCode)
         {
           case OFF:
@@ -65,34 +65,58 @@ class Strip
             renderable = false;
             break; 
           case STATIC:
+            adafruitStrip.fill(effectColor, 0, ledChipCount);
+            adafruitStrip.setBrightness( effectBrightness );
             adafruitStrip.show();
             renderable = false;
             break; 
           case BREATHE:
+            if(fillable)
+            {
+              adafruitStrip.fill(effectColor, 0, ledChipCount);
+              fillable = false;
+            }
             // math behind this:  1 + on the start makes sure that setB...(0) never gets called. Sets all led to off...
             //                    / 1000.0 scales down the changeing speed of the millis() function
             //                    + 1 offsets from sine's -1 .. +1 interval to 0 .. +2
             //                    * 127 scales up to full 254 interval
-            // TODO: make that 1000.0 variabel, so that breathe intervall can be adjusted. also make a function for changeing that variable or use setSpeed() funtion
-            adafruitStrip.setBrightness( 1 + (sin( millis() / 1000.0) + 1) * 127 );
+            adafruitStrip.setBrightness( 1 + (sin( _seed / 10000.0) + 1) * 127 );
             adafruitStrip.show();
-            break; 
+            break;
+          case ANTIBREATHE:
+            if(fillable)
+            {
+              adafruitStrip.fill(effectColor, 0, ledChipCount);
+              fillable = false;
+            }
+            // math behind this:  1 + on the start makes sure that setB...(0) never gets called. Sets all led to off...
+            //                    / 1000.0 scales down the changeing speed of the millis() function
+            //                    + 1 offsets from sine's -1 .. +1 interval to 0 .. +2
+            //                    * 127 scales up to full 254 interval
+            adafruitStrip.setBrightness( 1 + (-sin( _seed / 10000.0) + 1) * 127 );
+            adafruitStrip.show();
+            break;
           case RAINBOW:
-            renderRainbow();
+            renderRainbow(_seed);
             break; 
           case WAVE:
             // TODO: implement
             adafruitStrip.show();
             break;
+          case METEOR:
+            // TODO: implement
+            adafruitStrip.show();
+            break;
           
         }
-        delay(50);
       }
     }
+    
+// ------------------------------------------------------------------------------------------ EFFECT FUNCTIONS
 
-    void renderRainbow()
+    void renderRainbow(uint32_t _seed)
     {
-    	uint8_t j = (millis() >> 4) & 255;
+    	uint8_t j = (_seed >> 12) & 255;
       uint8_t ij;
     	for(uint16_t i = 0; i < ledChipCount; i++)
     	{
@@ -106,49 +130,91 @@ class Strip
     	}
       adafruitStrip.show();
     }
-	
+
+    // ------------------------------------------------------------------------------------------ SET CONFIG FUNCTIONS
     void setEffect(uint8_t _effect)
     {
       effectCode = _effect;
-      EEPROM.write(indexOfThisStrip * OFFSET_TO_NEXT_STRIP_DATA + EFFECT_ADDRESS, _effect);
-      this->setBrightness(255);
       renderable = true;
+      fillable = true;
+    }
+    
+    void setSpeed(uint8_t _speed, bool fromEEPROM)
+    {
+      if(fromEEPROM)
+        effectDelay = _speed;
+      else
+        effectDelay = constrain(255 - _speed, 1, 254);
+    }
+
+    void setBrightness(uint8_t _effectBrightness)
+    {
+      effectBrightness = _effectBrightness;
+      adafruitStrip.setBrightness(_effectBrightness);
     }
     
     void setColor(uint8_t _r, uint8_t _g, uint8_t _b)
     {
       effectColor = _r << 16 | _g << 8 | _b ;
-      EEPROMWrite_uint32_t(indexOfThisStrip * OFFSET_TO_NEXT_STRIP_DATA + COLOR_ADDRESS, effectColor);
-      adafruitStrip.fill(effectColor, 0, ledChipCount);
       renderable = true;
+      fillable = true;
     }
     
     void setColor(uint32_t _color)
     {
       effectColor = _color;
-      EEPROMWrite_uint32_t(indexOfThisStrip * OFFSET_TO_NEXT_STRIP_DATA + COLOR_ADDRESS, effectColor);
-      adafruitStrip.fill(effectColor, 0, ledChipCount);
       renderable = true;
+      fillable = true;
     }
     
-    void setSpeed(uint8_t _speed)
+    void setColorR(uint8_t _color)
     {
-      effectSpeed = _speed;
-      EEPROM.write(indexOfThisStrip * OFFSET_TO_NEXT_STRIP_DATA + SPEED_ADDRESS, _speed);
+      effectColor &= 0x00FFFF;
+      effectColor |= _color << 16;
+      renderable = true;
+      fillable = true;
     }
-    
-    void setBrightness(uint8_t _effectBrightness)
+    void setColorG(uint8_t _color)
     {
-      effectBrightness = _effectBrightness;
-      EEPROM.write(indexOfThisStrip * OFFSET_TO_NEXT_STRIP_DATA + BRIGHTNESS_ADDRESS, _effectBrightness);
-      adafruitStrip.setBrightness(_effectBrightness);
+      effectColor &= 0xFF00FF;
+      effectColor |= _color << 8;
+      renderable = true;
+      fillable = true;
     }
-    
-    String getEffect()
+    void setColorB(uint8_t _color)
     {
-      return String(effectCode);
+      effectColor &= 0xFFFF00;
+      effectColor |= _color;
+      renderable = true;
+      fillable = true;
     }
     
+    void setConfigTo(uint8_t _configNumber, uint8_t _configValue)
+    {
+      switch(_configNumber)
+      {
+        case URL_INDEX_OF_EFFECT:
+          setEffect(_configValue);
+          break;
+        case URL_INDEX_OF_SPEED:
+          setSpeed(_configValue, false);
+          break;
+        case URL_INDEX_OF_BRIGHTNESS:
+          setBrightness(_configValue);
+          break;
+        case URL_INDEX_OF_R:
+          setColorR(_configValue);
+          break;
+        case URL_INDEX_OF_G:
+          setColorG(_configValue);
+          break;
+        case URL_INDEX_OF_B:
+          setColorB(_configValue);
+          break;
+      }
+    }
+    
+    // ------------------------------------------------------------------------------------------ GET CONFIG FUNCTIONS
     String getColor(uint8_t _color)
     {
       switch(_color)
@@ -162,8 +228,58 @@ class Strip
       }
     }
     
-  private:
-  
-    bool renderable;
+    String getConfigAsURL()
+    {
+      String ret;
+      ret += String(indexOfThisStrip * URL_OFFSET_TO_NEXT_STRIP + URL_INDEX_OF_EFFECT) + "=" + String(effectCode);
+      ret += "&" + String(indexOfThisStrip * URL_OFFSET_TO_NEXT_STRIP + URL_INDEX_OF_SPEED) + "=" + String(255 - effectDelay);
+      ret += "&" + String(indexOfThisStrip * URL_OFFSET_TO_NEXT_STRIP + URL_INDEX_OF_BRIGHTNESS) + "=" + String(effectBrightness);
+      ret += "&" + String(indexOfThisStrip * URL_OFFSET_TO_NEXT_STRIP + URL_INDEX_OF_R) + "=" + getColor(R);
+      ret += "&" + String(indexOfThisStrip * URL_OFFSET_TO_NEXT_STRIP + URL_INDEX_OF_G) + "=" + getColor(G);
+      ret += "&" + String(indexOfThisStrip * URL_OFFSET_TO_NEXT_STRIP + URL_INDEX_OF_B) + "=" + getColor(B);
+      return ret; 
+    }
+    
+    // ------------------------------------------------------------------------------------------ OTHER FUNCTIONS
+    void loadConfigFromEEPROM()
+    {
+      setEffect(EEPROM.read(indexOfThisStrip * OFFSET_TO_NEXT_STRIP_DATA + EFFECT_ADDRESS));
+      setSpeed(EEPROM.read(indexOfThisStrip * OFFSET_TO_NEXT_STRIP_DATA + SPEED_ADDRESS), true);
+      setBrightness(EEPROM.read(indexOfThisStrip * OFFSET_TO_NEXT_STRIP_DATA + BRIGHTNESS_ADDRESS));
+      setColor(EEPROMRead_uint32_t(indexOfThisStrip * OFFSET_TO_NEXT_STRIP_DATA + COLOR_ADDRESS));
+      Serial.print("LOADED VALUES FROM EEPROM FOR STRIP ");
+      Serial.println(indexOfThisStrip);
+    }
+    
+    void saveConfigToEEPROM()
+    {
+      EEPROM.write(indexOfThisStrip * OFFSET_TO_NEXT_STRIP_DATA + EFFECT_ADDRESS, effectCode);
+      EEPROM.write(indexOfThisStrip * OFFSET_TO_NEXT_STRIP_DATA + SPEED_ADDRESS, effectDelay);
+      EEPROM.write(indexOfThisStrip * OFFSET_TO_NEXT_STRIP_DATA + BRIGHTNESS_ADDRESS, effectBrightness);
+      EEPROMWrite_uint32_t(indexOfThisStrip * OFFSET_TO_NEXT_STRIP_DATA + COLOR_ADDRESS, effectColor);
+      EEPROM.commit();
+    }
+
+    void setDefaultConfig()
+    {
+      setEffect(1);
+      setSpeed(200, false);
+      setBrightness(100);
+      setColor(0xFFFFFF);
+      Serial.print("DEFAULT CONFIG SET FOR STRIP ");
+      Serial.println(indexOfThisStrip);
+    }
+    
+  private: 
+    // ------------------------------ VARIABLES
+    Adafruit_NeoPixel adafruitStrip;
+    uint8_t         indexOfThisStrip;
+    uint16_t        ledChipCount;
+    uint8_t**       currentRGBValues;
+    uint8_t         effectCode;
+    uint8_t         effectDelay;
+    uint8_t         effectBrightness;
+    uint32_t        effectColor;
+    bool            renderable, fillable;
     
 };

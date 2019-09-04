@@ -1,7 +1,12 @@
 #include <FS.h>
 
+// ------------------------------------------------------------------------------------------ DEFINES
+
+
+
 // ------------------------------------------------------------------------------------------ FUNCTIONS
-String getContentType(String filename) { // convert the file extension to the MIME type
+String getContentType(String filename)              // convert the file extension to the MIME type
+{ 
   if (filename.endsWith(".html")) return "text/html";
   // TODO: add compressed formats as well. readmore: https://tttapa.github.io/ESP8266/Chap11%20-%20SPIFFS.html
   else if (filename.endsWith(".css")) return "text/css";
@@ -10,23 +15,24 @@ String getContentType(String filename) { // convert the file extension to the MI
   return "text/plain";
 }
 
-bool handleFileRead(String path, bool hasArgs)                        // send the right file to the client (if it exists)
+bool handleFileRead(String _path, bool _hasArgs)      // send the right file to the client (if it exists)
 {
   if(lastCommandEpochTick + RETAIN_COMMAND_FOR > timeClient.getEpochTime())
     isCommandValid = true;
   else
     isCommandValid = false;
     
-  Serial.println("handleFileRead: " + path);
-  if (path.endsWith("/"))
+  Serial.println("handleFileRead: " + _path);
+  if (_path.endsWith("/"))
   {
-    path += "index.html";                               // If a folder is requested, send the index file
+    _path += "index.html";                            // If a folder is requested, send the index file
   }
   
   // this redirects us to the parametered index page if the data is valid and there are no args already
-  if(isCommandValid && !hasArgs && path.endsWith("index.html"))
+  if(isCommandValid && !_hasArgs && _path.endsWith("index.html"))
   {
     // TODO: this will be unbearable later on, do something with this... make a getUrlCode() function or someting
+    /*
     String url = "/index.html?LR=";
     url += stripLogo.getColor(R);
     url += "&LG=";
@@ -35,16 +41,25 @@ bool handleFileRead(String path, bool hasArgs)                        // send th
     url += stripLogo.getColor(B);
     url += "&LE=";
     url += stripLogo.getEffect();
+    */
+    
+    String url = "/index.html?";
+    for(uint8_t index = 0; index < NUMBER_OF_STRIPS; index++)
+    {
+      url += strips[index].getConfigAsURL();
+      if( (index + 1) < NUMBER_OF_STRIPS)
+        url += "&";
+    }
     
     server.sendHeader("Location", url, true);
     server.send ( 302, "text/plain", "");
     return true;
   }
   
-  String contentType = getContentType(path);            // Get the MIME type
-  if (SPIFFS.exists(path))                              // If the file exists
+  String contentType = getContentType(_path);            // Get the MIME type
+  if (SPIFFS.exists(_path))                              // If the file exists
   {                            
-    File file = SPIFFS.open(path, "r");                 // Open it
+    File file = SPIFFS.open(_path, "r");                 // Open it
     size_t sent = server.streamFile(file, contentType); // And send it to the client
     file.close();                                       // Then close the file again
     return true;
@@ -58,19 +73,27 @@ void handleCommand() {
   // save last time data was sent to ESP
   timeClient.update();
   EEPROMWrite_uint32_t(LAST_COMMAND_EPOCH_ADDRESS,timeClient.getEpochTime());
-
+  
+  for (uint8_t index = 0; index < server.args(); index++)
+  {
+    //strip number is coded in the offset 9 / 10 == 0              ||| setConfigTo(config number as defined, config value)
+    strips[server.argName(index).toInt() / URL_OFFSET_TO_NEXT_STRIP].setConfigTo(server.argName(index).toInt() % URL_OFFSET_TO_NEXT_STRIP,server.arg(index).toInt());
+  }
   // TODO: make a function in strip class that gets the args and sets itself
   // TODO: also make an API or at least make a little bit fool proof the command syntax and parameter order
-  stripLogo.setColor(server.arg(0).toInt(),server.arg(1).toInt(),server.arg(2).toInt());
-  stripLogo.setEffect(server.arg(3).toInt());
+  //stripLogo.setColor(server.arg(0).toInt(),server.arg(1).toInt(),server.arg(2).toInt());
+  //stripLogo.setEffect(server.arg(3).toInt());
   
-  EEPROM.commit();
+  for(uint8_t index = 0; index < NUMBER_OF_STRIPS; index++)
+  {
+    strips[index].saveConfigToEEPROM();
+  }
   
   String message = "<html><head></head><body style='font-family: sans-serif; font-size: 12px' onload=\"onLoadFunction()\">";
 
-  message += "Redirecting to previous page in 2 sec.";
+  message += "Redirecting to previous page...";
   // this is a html code that auto executes on load of the page and calls another function delayed by  V this value, that redirects us to the previous page.
-  message += "<script>function onLoadFunction(){setTimeout(function(){ window.location.href=\"/\";}, 2000); } </script>";
+  message += "<script>function onLoadFunction(){setTimeout(function(){ window.location.href=\"/\";}, 500); } </script>";
   
   message += "</body></html>";
   server.send(200, "text/html", message);
