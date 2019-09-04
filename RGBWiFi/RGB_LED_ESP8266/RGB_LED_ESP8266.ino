@@ -16,6 +16,7 @@ NTPClient timeClient(ntpUDP, "europe.pool.ntp.org", 7200, 60000);     // protoco
 // ------------------------------------------------------------------------------------------ DEFINES
 #define WIFI_SSID "Mha Hart Mah Sole"
 //#define WIFI_PW  "aezakmi123"
+
 // requires support on windows 10 which is not state of the art yet...
 //#define MDNS_ADDRESS "ESPI"
 
@@ -159,16 +160,6 @@ void loop(void)
         Serial.print(index);
         Serial.print("'s URL is ");
         Serial.println(strips[index].getConfigAsURL());
-      }
-    }
-    else if (command == (uint8_t)'b')
-    {
-      for(uint8_t index = 0; index < NUMBER_OF_STRIPS; index++)
-      {
-        Serial.print("Strip number ");
-        Serial.print(index);
-        Serial.print("'s renderable is  ");
-        Serial.println(strips[index].renderable);
       }
     }
     

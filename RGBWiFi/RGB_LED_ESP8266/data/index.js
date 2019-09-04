@@ -5,51 +5,65 @@ const URL_INDEX_OF_BRIGHTNESS         	= 3;
 const URL_INDEX_OF_R                  	= 5;
 const URL_INDEX_OF_G                  	= 6;
 const URL_INDEX_OF_B                  	= 7;
+const JS_INDEX_OF_BUTTON				= 9;
 const URL_OFFSET_TO_NEXT_STRIP        	= 10;
 
-const LOGO_URL_OFFSET					= 0 * URL_OFFSET_TO_NEXT_STRIP;
-const FRAME_URL_OFFSET					= 1 * URL_OFFSET_TO_NEXT_STRIP;
+//const LOGO_URL_OFFSET					= 0 * URL_OFFSET_TO_NEXT_STRIP;
+//const FRAME_URL_OFFSET					= 1 * URL_OFFSET_TO_NEXT_STRIP;
 
 
 //EXPAND
-var sliderLogoR = document.getElementById("rangeLogoR");
-var sliderLogoG = document.getElementById("rangeLogoG");
-var sliderLogoB = document.getElementById("rangeLogoB");
-var sliderLogoBr = document.getElementById("rangeLogoBrightness");
-var sliderLogoSp = document.getElementById("rangeLogoSpeed");
-var buttonLogo = document.getElementById("buttonLogo");
+var elementsLogo = [
+		0,
+		document.getElementsByName("logo"),
+		document.getElementById("rangeLogoSpeed"),
+		document.getElementById("rangeLogoBrightness"),
+		0,
+		document.getElementById("rangeLogoR"),
+		document.getElementById("rangeLogoG"),
+		document.getElementById("rangeLogoB"),
+		0,
+		document.getElementById("buttonLogo")
+];
 
-var sliderFrameR = document.getElementById("rangeFrameR");
-var sliderFrameG = document.getElementById("rangeFrameG");
-var sliderFrameB = document.getElementById("rangeFrameB");
-var sliderFrameBr = document.getElementById("rangeFrameBrightness");
-var sliderFrameSp = document.getElementById("rangeFrameSpeed");
-var buttonFrame = document.getElementById("buttonFrame");
+var elementsFrame = [
+		0,
+		document.getElementsByName("frame"),
+		document.getElementById("rangeFrameSpeed"),
+		document.getElementById("rangeFrameBrightness"),
+		0,
+		document.getElementById("rangeFrameR"),
+		document.getElementById("rangeFrameG"),
+		document.getElementById("rangeFrameB"),
+		0,
+		document.getElementById("buttonFrame")
+];
+
+//EXPAND
+var elementsAll = [ elementsLogo , elementsFrame ];
 
 var currentURL = new URL(document.URL);
 
-function onInput(id){
+function onInput(_id){
 	//EXPAND
-	switch(id) {
-	case 'sliderContainerLogo':
-		var _sliderR = sliderLogoR;
-		var _sliderG = sliderLogoG;
-		var _sliderB = sliderLogoB;
-		var _button = buttonLogo;
-		break;
-	case 'sliderContainerFrame':
-		var _sliderR = sliderFrameR;
-		var _sliderG = sliderFrameG;
-		var _sliderB = sliderFrameB;
-		var _button = buttonFrame;
-		break;
-	default:
-		throw "DEBUG HTML CODE YOU MORON!!!";
+	switch(_id){
+		case "sliderContainerLogo":
+			changeColor(0);
+			break;
+		case "sliderContainerFrame":
+			changeColor(1);
+			break;
 	}
+}
+function changeColor(_index){
+	let _sliderR = elementsAll[_index][URL_INDEX_OF_R];
+	let _sliderG = elementsAll[_index][URL_INDEX_OF_G];
+	let _sliderB = elementsAll[_index][URL_INDEX_OF_B];
+	let _buttons = elementsAll[_index][JS_INDEX_OF_BUTTON];
 	
-	var r = parseInt(_sliderR.value, 10).toString(16);
-	var g = parseInt(_sliderG.value, 10).toString(16);
-	var b = parseInt(_sliderB.value, 10).toString(16);
+	let r = parseInt(_sliderR.value, 10).toString(16);
+	let g = parseInt(_sliderG.value, 10).toString(16);
+	let b = parseInt(_sliderB.value, 10).toString(16);
 	
 	if(r.length === 1)
 		r = "0" + r;
@@ -58,9 +72,9 @@ function onInput(id){
 	if(b.length === 1)
 		b = "0" + b;
 	
-	var color = "#" + r + g + b;
-	_button.style.background = color;
-	_button.style.color = invertColor(color);
+	let color = "#" + r + g + b;
+	_buttons.style.background = color;
+	_buttons.style.color = invertColor(color);
 }
 
 function invertColor(hex) {
@@ -75,7 +89,7 @@ function invertColor(hex) {
         throw new Error('Invalid HEX color.');
     }
     // invert color components
-    var r = (255 - parseInt(hex.slice(0, 2), 16)).toString(16),
+    let r = (255 - parseInt(hex.slice(0, 2), 16)).toString(16),
         g = (255 - parseInt(hex.slice(2, 4), 16)).toString(16),
         b = (255 - parseInt(hex.slice(4, 6), 16)).toString(16);
     // pad each with zeros and return
@@ -90,40 +104,43 @@ function invertColor(hex) {
 }
 
 function onLoadFunction() {
-	var valuePairs = location.search.substr(1).split("&");
-	
+	let valuePairs = location.search.substr(1).split("&");
+	let i;
 	for(i = 0; i < valuePairs.length; i++) { 
-		var valuePair = valuePairs[i];
-		switch(Math.floor(valuePair[0] / URL_OFFSET_TO_NEXT_STRIP)){
-			case 0:
-				break;
-			case 1:
-				break;
-			FELROBBAN AZ AGYAM, FOLYT KÖV
+		let valuePair = valuePairs[i].split("=");
+		let elementToSet = elementsAll[Math.floor(valuePair[0] / URL_OFFSET_TO_NEXT_STRIP)]
+		[valuePair[0] % URL_OFFSET_TO_NEXT_STRIP];
+		if((valuePair[0] % URL_OFFSET_TO_NEXT_STRIP ) == URL_INDEX_OF_EFFECT){	// redio buttons
+			elementToSet[valuePair[1]].checked = true;
+		}
+		else if(false){	// for the timer
+		}
+		else{
+			elementToSet.value = parseInt(valuePair[1], 10);
 		}
 	}
-	
-	if(LE == null)
-		LE = "0";
-	
-	sliderLogoR.value = parseInt(LR, 10);
-	sliderLogoG.value = parseInt(LG, 10);
-	sliderLogoB.value = parseInt(LB, 10);
-	var buttons = document.getElementsByName("logo"); 
-	buttons[parseInt(LE, 10)].checked = true;
-	
-	//EXPAND
-	onInput('sliderContainerLogo');
-	onInput('sliderContainerFrame');
-}
-
-function buttonClick(id){
-	if(id == 'buttonAll'){
-		//EXPAND
-		window.location.href = "/command?" + getURLOf('buttonLogo') + '&' + getURLOf('buttonFrame');
+	for(i = 0; i < elementsAll.length; i++) {
+		changeColor(i);
 	}
 	
-	window.location.href = "/command?" + getURLOf(id);
+	//EXPAND
+	rangeBrightness("rangeLogoBrightness");
+	rangeBrightness("rangeFrameBrightness");
+}
+
+function buttonClick(_index){
+	if(_index == 999){
+		let redirectLink = "/command?";
+		let i;
+		for(i = 0; i < elementsAll.length; i++) { 
+			redirectLink += getURLOf(i);
+			if((i + 1) < elementsAll.length)
+				redirectLink += "&";
+		}
+		window.location.href = redirectLink;
+	}
+	
+	window.location.href = "/command?" + getURLOf(_index);
 }
 
 /*
@@ -137,55 +154,37 @@ const URL_INDEX_OF_B                  = 7;
 const URL_OFFSET_TO_NEXT_STRIP        = 10;
 */
 
-function getURLOf(id){
-	var ret = "";
-	switch(id) {
-	case 'buttonLogo':
-		var _sliderR = sliderLogoR;
-		var _sliderG = sliderLogoG;
-		var _sliderB = sliderLogoB;
-		var _sliderBr = sliderLogoBr;
-		var _sliderSp = sliderLogoSp;
-		var _button = buttonLogo;
-		var name = "logo";
-		var offset = 0;
-		break;
-	case 'buttonFrame':
-		var _sliderR = sliderFrameR;
-		var _sliderG = sliderFrameG;
-		var _sliderB = sliderFrameB;
-		var _sliderBr = sliderFrameBr;
-		var _sliderSp = sliderFrameSp;
-		var _button = buttonFrame;
-		var name = "frame";
-		var offset = 1 * URL_OFFSET_TO_NEXT_STRIP;
-		break;
-	default:
-		throw "DEBUG HTML CODE YOU MORON!!!";
-	}
-	ret += (offset + URL_INDEX_OF_EFFECT) + "=" + getSelectedButton(name);
-	ret += "&" + (offset + URL_INDEX_OF_SPEED) + "=" + _sliderSp.value;
-	ret += "&" + (offset + URL_INDEX_OF_BRIGHTNESS) + "=" + _sliderBr.value;
-	ret += "&" + (offset + URL_INDEX_OF_R) + "=" + _sliderR.value;
-	ret += "&" + (offset + URL_INDEX_OF_G) + "=" + _sliderG.value;
-	ret += "&" + (offset + URL_INDEX_OF_B) + "=" + _sliderB.value;
+function getURLOf(_index){
+	let _buttons = elementsAll[_index][URL_INDEX_OF_EFFECT];
+	let _sliderSp = elementsAll[_index][URL_INDEX_OF_SPEED];
+	let _sliderBr = elementsAll[_index][URL_INDEX_OF_BRIGHTNESS];
 	
+	let _sliderR = elementsAll[_index][URL_INDEX_OF_R];
+	let _sliderG = elementsAll[_index][URL_INDEX_OF_G];
+	let _sliderB = elementsAll[_index][URL_INDEX_OF_B];
+	
+	let ret = "";
+	ret += (_index * URL_OFFSET_TO_NEXT_STRIP + URL_INDEX_OF_EFFECT) + "=" + getSelectedButton(_buttons);
+	ret += "&" + (_index * URL_OFFSET_TO_NEXT_STRIP + URL_INDEX_OF_SPEED) + "=" + _sliderSp.value;
+	ret += "&" + (_index * URL_OFFSET_TO_NEXT_STRIP + URL_INDEX_OF_BRIGHTNESS) + "=" + _sliderBr.value;
+	ret += "&" + (_index * URL_OFFSET_TO_NEXT_STRIP + URL_INDEX_OF_R) + "=" + _sliderR.value;
+	ret += "&" + (_index * URL_OFFSET_TO_NEXT_STRIP + URL_INDEX_OF_G) + "=" + _sliderG.value;
+	ret += "&" + (_index * URL_OFFSET_TO_NEXT_STRIP + URL_INDEX_OF_B) + "=" + _sliderB.value;
 	
 	return ret;
 }
 
-function getSelectedButton(name) { 
-	var buttons = document.getElementsByName(name); 
-	
-	for(i = 0; i < buttons.length; i++) { 
-		if(buttons[i].checked) 
+function getSelectedButton(_buttons) {
+	let i;
+	for(i = 0; i < _buttons.length; i++) { 
+		if(_buttons[i].checked) 
 			return i;
 	}
 }
 
 function rangeBrightness(id){ 
-	var range = document.getElementById(id); 
-	var value = parseInt(range.value, 10).toString(16);
+	let range = document.getElementById(id); 
+	let value = parseInt(range.value, 10).toString(16);
 	if( value.length == 1 )
 		value = "0" + value;
 	range.style.background = "#" + value + value + value;
