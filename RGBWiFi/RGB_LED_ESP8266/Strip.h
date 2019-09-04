@@ -96,7 +96,7 @@ class Strip
             adafruitStrip.show();
             break;
           case METEOR:
-            meteorRain(10, 64, true, 30);
+            meteorRain(_seed, 8, 64, true); //seed, meteorSize, meteorTrailDecay, meteorRandomDecayRate
             break;
           
         }
@@ -122,54 +122,48 @@ class Strip
       adafruitStrip.show();
     }
 
-    void meteorRain(byte meteorSize, byte meteorTrailDecay, boolean meteorRandomDecay, int SpeedDelay) 
-    {  
-      adafruitStrip.clear();
+    void meteorRain(uint32_t _seed, uint8_t meteorSize, uint8_t meteorTrailDecay, boolean meteorRandomDecay) 
+    {
+      uint16_t index = (_seed >> 10)  % (ledChipCount + ledChipCount);
       
-      for(int i = 0; i < ledChipCount+ledChipCount; i++) {
-        
-        
-        // fade brightness all LEDs one step
-        for(int j=0; j<ledChipCount; j++) {
-          if( (!meteorRandomDecay) || (random(10)>5) ) {
-            fadeToBlack(j, meteorTrailDecay );        
-          }
+      // fade brightness all LEDs one step
+      for(uint16_t j = 0; j < ledChipCount; j++)
+      {
+        // with big effectDelay we need more probability, with smaller delay less probability
+        if( (!meteorRandomDecay) || (random( effectDelay / 2  + 2000) > 1800) )
+        {
+          fadeToBlack( j, meteorTrailDecay );        
         }
-        
-        // draw meteor
-        for(int j = 0; j < meteorSize; j++) {
-          if( ( i-j <ledChipCount) && (i-j>=0) ) {
-            adafruitStrip.setPixelColor(i-j, effectColor);
-          } 
-        }
-       
-        adafruitStrip.show();
-        delay(SpeedDelay);
       }
+      
+      // draw meteor
+      for(uint8_t j = 0; j < meteorSize; j++)
+      {
+        if( ( index-j <ledChipCount) && (index-j>=0) )
+        {
+          adafruitStrip.setPixelColor(index-j, effectColor);
+        } 
+      }
+     
+      adafruitStrip.show();
     }
     
-    void fadeToBlack(int ledNo, byte fadeValue) {
-     #ifdef ADAFRUIT_NEOPIXEL_H 
-        // NeoPixel
-        uint32_t oldColor;
-        uint8_t r, g, b;
-        int value;
-        
-        oldColor = adafruitStrip.getPixelColor(ledNo);
-        r = (oldColor & 0x00ff0000UL) >> 16;
-        g = (oldColor & 0x0000ff00UL) >> 8;
-        b = (oldColor & 0x000000ffUL);
-    
-        r=(r<=10)? 0 : (int) r-(r*fadeValue/256);
-        g=(g<=10)? 0 : (int) g-(g*fadeValue/256);
-        b=(b<=10)? 0 : (int) b-(b*fadeValue/256);
-        
-        adafruitStrip.setPixelColor(ledNo, r,g,b);
-     #endif
-     #ifndef ADAFRUIT_NEOPIXEL_H
-       // FastLED
-       leds[ledNo].fadeToBlackBy(fadeValue);
-     #endif  
+    void fadeToBlack(uint16_t ledNo, uint8_t fadeValue)
+    {
+      uint32_t oldColor;
+      uint8_t r, g, b;
+      int value;
+      
+      oldColor = adafruitStrip.getPixelColor(ledNo);
+      r = (oldColor & 0x00ff0000UL) >> 16;
+      g = (oldColor & 0x0000ff00UL) >> 8;
+      b = (oldColor & 0x000000ffUL);
+      
+      r=(r<=10)? 0 : (int) r-(r*fadeValue/256);
+      g=(g<=10)? 0 : (int) g-(g*fadeValue/256);
+      b=(b<=10)? 0 : (int) b-(b*fadeValue/256);
+      
+      adafruitStrip.setPixelColor(ledNo, r,g,b);
     }
 
     // ------------------------------------------------------------------------------------------ SET CONFIG FUNCTIONS
@@ -185,6 +179,7 @@ class Strip
         effectDelay = _speed;
       else
         effectDelay = constrain(255 - _speed, 1, 254);
+        
     }
 
     void setBrightness(uint8_t _effectBrightness)
