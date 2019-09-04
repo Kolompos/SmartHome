@@ -97,7 +97,6 @@ class Strip
             break;
           case METEOR:
             meteorRain(10, 64, true, 30);
-            adafruitStrip.show();
             break;
           
         }
@@ -125,13 +124,13 @@ class Strip
 
     void meteorRain(byte meteorSize, byte meteorTrailDecay, boolean meteorRandomDecay, int SpeedDelay) 
     {  
-      setAll(0,0,0);
+      adafruitStrip.clear();
       
-      for(int i = 0; i < NUM_LEDS+NUM_LEDS; i++) {
+      for(int i = 0; i < ledChipCount+ledChipCount; i++) {
         
         
         // fade brightness all LEDs one step
-        for(int j=0; j<NUM_LEDS; j++) {
+        for(int j=0; j<ledChipCount; j++) {
           if( (!meteorRandomDecay) || (random(10)>5) ) {
             fadeToBlack(j, meteorTrailDecay );        
           }
@@ -139,12 +138,12 @@ class Strip
         
         // draw meteor
         for(int j = 0; j < meteorSize; j++) {
-          if( ( i-j <NUM_LEDS) && (i-j>=0) ) {
-            setPixel(i-j, red, green, blue);
+          if( ( i-j <ledChipCount) && (i-j>=0) ) {
+            adafruitStrip.setPixelColor(i-j, effectColor);
           } 
         }
        
-        adafruitStrip.show()
+        adafruitStrip.show();
         delay(SpeedDelay);
       }
     }
