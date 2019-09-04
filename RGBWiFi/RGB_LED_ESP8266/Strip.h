@@ -101,10 +101,7 @@ class Strip
             meteorRain(10, 64, true, 30);
             break;
           case BOUNCINGBALL:
-            byte colors[3][3] = { {0xff, 0,0}, 
-                                  {0xff, 0xff, 0xff}, 
-                                  {0   , 0   , 0xff} };
-            BouncingColoredBalls(3, colors);
+            BouncingColoredBalls(3);
             break;
            case FIRE:
             FireEffect(55,120,15);
@@ -182,7 +179,11 @@ class Strip
      #endif  
     }
 
-    void BouncingColoredBalls(int BallCount, byte colors[][3]) {
+    void BouncingColoredBalls(int BallCount) {
+      byte colors[3][3] = { {0xff, 0,   0}, 
+                      {0xff, 0xff, 0xff}, 
+                      {0   , 0   , 0xff}
+                      };
       float Gravity = -9.81;
       int StartHeight = 1;
       
@@ -230,7 +231,7 @@ class Strip
     }
 
     void FireEffect(int Cooling, int Sparking, int SpeedDelay) {
-      static byte heat*;
+      static byte heat[100];
       int cooldown;
       
       // Step 1.  Cool down every cell a little
