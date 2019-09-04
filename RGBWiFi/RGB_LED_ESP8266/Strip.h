@@ -71,11 +71,7 @@ class Strip
             renderable = false;
             break; 
           case BREATHE:
-            if(fillable)
-            {
-              adafruitStrip.fill(effectColor, 0, ledChipCount);
-              fillable = false;
-            }
+            adafruitStrip.fill(effectColor, 0, ledChipCount);
             // math behind this:  1 + on the start makes sure that setB...(0) never gets called. Sets all led to off...
             //                    / 1000.0 scales down the changeing speed of the millis() function
             //                    + 1 offsets from sine's -1 .. +1 interval to 0 .. +2
@@ -84,11 +80,7 @@ class Strip
             adafruitStrip.show();
             break;
           case ANTIBREATHE:
-            if(fillable)
-            {
-              adafruitStrip.fill(effectColor, 0, ledChipCount);
-              fillable = false;
-            }
+            adafruitStrip.fill(effectColor, 0, ledChipCount);
             // math behind this:  1 + on the start makes sure that setB...(0) never gets called. Sets all led to off...
             //                    / 1000.0 scales down the changeing speed of the millis() function
             //                    + 1 offsets from sine's -1 .. +1 interval to 0 .. +2
@@ -136,7 +128,6 @@ class Strip
     {
       effectCode = _effect;
       renderable = true;
-      fillable = true;
     }
     
     void setSpeed(uint8_t _speed, bool fromEEPROM)
@@ -157,14 +148,12 @@ class Strip
     {
       effectColor = _r << 16 | _g << 8 | _b ;
       renderable = true;
-      fillable = true;
     }
     
     void setColor(uint32_t _color)
     {
       effectColor = _color;
       renderable = true;
-      fillable = true;
     }
     
     void setColorR(uint8_t _color)
@@ -172,21 +161,18 @@ class Strip
       effectColor &= 0x00FFFF;
       effectColor |= _color << 16;
       renderable = true;
-      fillable = true;
     }
     void setColorG(uint8_t _color)
     {
       effectColor &= 0xFF00FF;
       effectColor |= _color << 8;
       renderable = true;
-      fillable = true;
     }
     void setColorB(uint8_t _color)
     {
       effectColor &= 0xFFFF00;
       effectColor |= _color;
       renderable = true;
-      fillable = true;
     }
     
     void setConfigTo(uint8_t _configNumber, uint8_t _configValue)
@@ -280,6 +266,6 @@ class Strip
     uint8_t         effectDelay;
     uint8_t         effectBrightness;
     uint32_t        effectColor;
-    bool            renderable, fillable;
+    bool            renderable;
     
 };
