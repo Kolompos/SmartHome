@@ -9,7 +9,7 @@ const JS_INDEX_OF_BUTTON				= 9;
 const URL_OFFSET_TO_NEXT_STRIP        	= 10;
 
 //EXPAND
-const ELEMENTS_NUMBER					= 2;
+const ELEMENTS_NUMBER					= 3;
 
 var elementsAll = [];
 let i;
@@ -97,7 +97,7 @@ function onLoadFunction() {
 			elementToSet.value = parseInt(valuePair[1], 10);
 		}
 	}
-	for(i = 0; i < elementsAll.length; i++) {
+	for(i = 0; i < ELEMENTS_NUMBER; i++) {
 		changeColor(i);
 		rangeBrightness("rangeBrightness" + i);
 		rangeSpeed("rangeSpeed" + i);
@@ -109,9 +109,9 @@ function buttonClick(_index){
 	if(_index == 999){
 		let redirectLink = "/command?";
 		let i;
-		for(i = 0; i < elementsAll.length; i++) { 
+		for(i = 0; i < ELEMENTS_NUMBER; i++) { 
 			redirectLink += getURLOf(i);
-			if((i + 1) < elementsAll.length)
+			if((i + 1) < ELEMENTS_NUMBER)
 				redirectLink += "&";
 		}
 		window.location.href = redirectLink;

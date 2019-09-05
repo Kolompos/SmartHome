@@ -7,7 +7,6 @@
 #include <FS.h>
 #include <WiFiUdp.h>
 #include <NTPClient.h>
-#include "IgnoredDefines.h"
 
 // ------------------------------------------------------------------------------------------ OBJECTS
 ESP8266WebServer server(80);
@@ -37,10 +36,8 @@ uint32_t lastCommandEpochTick, seedGlobal;
 
 bool isCommandValid;
 
-// ------------------------------------------------------------------------------------------ OWN SOURCE FILES
-#include "Strip.h"
-Strip strips[NUMBER_OF_STRIPS] = { { LOGO_PIN,LOGO_LED_COUNT,0 } , { FRAME_PIN,FRAME_LED_COUNT,1 } };
-#include "Handles.h"
+// ------------------------------------------------------------------------------------------ IGNORED PART
+#include "IgnoredDefines.h"
 
 // ------------------------------------------------------------------------------------------ SETUP
 void setup(void) 

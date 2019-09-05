@@ -176,9 +176,9 @@ class Strip
     }
 
     // ------------------------------------------------------------------------------------------ bouncingColoredBalls
-    uint8_t colors[BALL_COUNT][3] =     { { 0xff , 0    ,   0  }, 
-                                          { 0xff , 0xff , 0xff }, 
-                                          { 0    , 0    , 0xff } };
+    uint8_t colors[BALL_COUNT][3] =     { { 0xff , 0    ,   0  },     // red
+                                          { 0xff , 0xff , 0xff },     // white
+                                          { 0    , 0    , 0xff } };   // blue
     float Gravity = -9.81;
     uint8_t StartHeight = 1;
     

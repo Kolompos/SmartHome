@@ -51,6 +51,29 @@
 				</div>
 				<button type="button" id="button1" class="button" onclick="buttonClick(this.id)">COMMIT COLOR AND EFFECT FOR THIS STRIP</button>
 			</div>
+			<div id="div2" class="functionDiv">
+			<h1>LAMP section</h1>
+				<div id="sliderContainer2" class="sliderContainer" oninput="onInput(this.id)">
+					<input type="range" id="rangeR2" min="0" max="255" value="10" class="red slider">
+					<input type="range" id="rangeG2" min="0" max="255" value="10" class="green slider">
+					<input type="range" id="rangeB2" min="0" max="255" value="10" class="blue slider">
+					<input type="range" id="rangeBrightness2" min="0" max="255" value="100" class="brightness slider" oninput="rangeBrightness(this.id)">
+					<input type="range" id="rangeSpeed2" min="0" max="250" value="200" class="speed slider" oninput="rangeSpeed(this.id)">
+					<div id="textOnSlider2" class="textOnSlider">---</div>
+				</div>
+				<div class="radioContainer" id="radioContainer2">
+					<label class="label"><input type="radio" name="radio2"> OFF</label>
+					<label class="label"><input type="radio" name="radio2"> STATIC</label>
+					<label class="label"><input type="radio" name="radio2"> BREATHE</label>
+					<label class="label"><input type="radio" name="radio2"> ANTIBREATHE</label>
+					<label class="label"><input type="radio" name="radio2"> RAINBOW</label>
+					<label class="label"><input type="radio" name="radio2"> WAVE</label>
+					<label class="label"><input type="radio" name="radio2"> METEOR</label>
+					<label class="label"><input type="radio" name="radio2"> BOUNCINGBALL</label>
+					<label class="label"><input type="radio" name="radio2"> FIRE</label>
+				</div>
+				<button type="button" id="button2" class="button" onclick="buttonClick(this.id)">COMMIT COLOR AND EFFECT FOR THIS STRIP</button>
+			</div>
 			<button type="button" id="button999" class="button" onclick="buttonClick(this.id)">COMMIT COLOR AND EFFECT FOR ALL STRIP</button>
 		</div>
 	</body>
