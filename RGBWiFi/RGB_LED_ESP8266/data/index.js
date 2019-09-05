@@ -8,7 +8,7 @@ const URL_INDEX_OF_B                  	= 7;
 const JS_INDEX_OF_BUTTON				= 9;
 const URL_OFFSET_TO_NEXT_STRIP        	= 10;
 
-//EXPAND
+//CHANGE ONLY HERE
 const ELEMENTS_NUMBER					= 3;
 
 var elementsAll = [];

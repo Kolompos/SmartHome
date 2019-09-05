@@ -37,6 +37,26 @@ uint32_t lastCommandEpochTick, seedGlobal;
 bool isCommandValid;
 
 // ------------------------------------------------------------------------------------------ IGNORED PART
+/* // Template contet for "IgnoredDefines.h"
+ * #define WIFI_SSID "---"
+ * #define WIFI_PW  "---"
+ * 
+ * // strips settings
+ * #define NUMBER_OF_STRIPS                3
+ * 
+ * #define LOGO_PIN                        D4
+ * #define LOGO_LED_COUNT                  14
+ * 
+ * #define FRAME_PIN                       D3
+ * #define FRAME_LED_COUNT                 82
+ * 
+ * #define LAMP_PIN                        D2
+ * #define LAMP_LED_COUNT                  22
+ * 
+ * #include "Strip.h"
+ * Strip strips[NUMBER_OF_STRIPS] = { { LOGO_PIN,LOGO_LED_COUNT,0 } , { FRAME_PIN,FRAME_LED_COUNT,1 }, { LAMP_PIN,LAMP_LED_COUNT,2 } };
+ * #include "Handles.h"
+ * */
 #include "IgnoredDefines.h"
 
 // ------------------------------------------------------------------------------------------ SETUP
