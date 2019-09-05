@@ -58,7 +58,7 @@ class Strip
     {
       if(renderable)
       {
-        _seed /= effectDelay ;
+        _seed /= effectDelay;
         switch(effectCode)
         {
           case OFF:
@@ -83,10 +83,6 @@ class Strip
             break;
           case ANTIBREATHE:
             adafruitStrip.fill(effectColor, 0, ledChipCount);
-            // math behind this:  1 + on the start makes sure that setB...(0) never gets called. Sets all led to off...
-            //                    / 1000.0 scales down the changeing speed of the millis() function
-            //                    + 1 offsets from sine's -1 .. +1 interval to 0 .. +2
-            //                    * 127 scales up to full 254 interval
             adafruitStrip.setBrightness( 1 + (-sin( _seed / 10000.0) + 1) * 127 );
             adafruitStrip.show();
             break;
@@ -98,20 +94,24 @@ class Strip
             adafruitStrip.show();
             break;
           case METEOR:
-            meteorRain(_seed, 8, 64, true); //seed, meteorSize, meteorTrailDecay, meteorRandomDecayRate
+            meteorRain(_seed, 6, 64, true); //seed, meteorSize, meteorTrailDecay, meteorRandomDecayRate
             break;
           case BOUNCINGBALL:
-            BouncingColoredBalls(3);
+            bouncingColoredBalls(3);
             break;
-           case FIRE:
-            FireEffect(55,120,15);
+          case FIRE:
+            fireEffect(55,120,15);
             break;
+          default:  //when unconfigured set the leds off
+            adafruitStrip.clear();
+            adafruitStrip.show();
+            renderable = false;
         }
       }
     }
     
-// ------------------------------------------------------------------------------------------ EFFECT FUNCTIONS
-
+    // ------------------------------------------------------------------------------------------ EFFECT FUNCTIONS
+    // ------------------------------------------------------------------------------------------ renderRainbow
     void renderRainbow(uint32_t _seed)
     {
     	uint8_t j = (_seed >> 12) & 255;
@@ -129,15 +129,15 @@ class Strip
       adafruitStrip.show();
     }
 
+    // ------------------------------------------------------------------------------------------ meteorRain
     void meteorRain(uint32_t _seed, uint8_t meteorSize, uint8_t meteorTrailDecay, boolean meteorRandomDecay) 
     {
-      uint16_t index = (_seed >> 10)  % (ledChipCount + ledChipCount);
+      uint16_t index = (_seed >> 11)  % (ledChipCount + ledChipCount);
       
       // fade brightness all LEDs one step
       for(uint16_t j = 0; j < ledChipCount; j++)
       {
-        // with big effectDelay we need more probability, with smaller delay less probability
-        if( (!meteorRandomDecay) || (random( effectDelay / 2  + 2000) > 1800) )
+        if( (!meteorRandomDecay) || (random( (255 - effectDelay) + 160000) > 155000) ) //80000 and 78000 good candidates
         {
           fadeToBlack( j, meteorTrailDecay );        
         }
@@ -159,37 +159,38 @@ class Strip
     {
       uint32_t oldColor;
       uint8_t r, g, b;
-      int value;
       
       oldColor = adafruitStrip.getPixelColor(ledNo);
       r = (oldColor & 0x00ff0000UL) >> 16;
       g = (oldColor & 0x0000ff00UL) >> 8;
       b = (oldColor & 0x000000ffUL);
       
-      r=(r<=10)? 0 : (int) r-(r*fadeValue/256);
-      g=(g<=10)? 0 : (int) g-(g*fadeValue/256);
-      b=(b<=10)? 0 : (int) b-(b*fadeValue/256);
+      r=(r<=10)? 0 : (uint8_t) r-(r*fadeValue/256);
+      g=(g<=10)? 0 : (uint8_t) g-(g*fadeValue/256);
+      b=(b<=10)? 0 : (uint8_t) b-(b*fadeValue/256);
       
       adafruitStrip.setPixelColor(ledNo, r,g,b);
     }
 
-    void BouncingColoredBalls(int BallCount) {
-      byte colors[3][3] = { {0xff, 0,   0}, 
-                      {0xff, 0xff, 0xff}, 
-                      {0   , 0   , 0xff}
-                      };
+    // ------------------------------------------------------------------------------------------ bouncingColoredBalls
+    void bouncingColoredBalls(uint8_t BallCount)
+    {
+      uint8_t colors[3][3] =  { { 0xff , 0    ,   0  }, 
+                                { 0xff , 0xff , 0xff }, 
+                                { 0    , 0    , 0xff } };
       float Gravity = -9.81;
-      int StartHeight = 1;
+      uint8_t StartHeight = 1;
       
-      float Height[BallCount];
-      float ImpactVelocityStart = sqrt( -2 * Gravity * StartHeight );
-      float ImpactVelocity[BallCount];
-      float TimeSinceLastBounce[BallCount];
-      int   Position[BallCount];
-      long  ClockTimeSinceLastBounce[BallCount];
-      float Dampening[BallCount];
+      float     Height[BallCount];
+      float     ImpactVelocityStart = sqrt( -2 * Gravity * StartHeight );
+      float     ImpactVelocity[BallCount];
+      float     TimeSinceLastBounce[BallCount];
+      uint8_t   Position[BallCount];
+      uint32_t  ClockTimeSinceLastBounce[BallCount];
+      float     Dampening[BallCount];
       
-      for (int i = 0 ; i < BallCount ; i++) {   
+      for (uint8_t i = 0 ; i < BallCount ; i++)
+      {   
         ClockTimeSinceLastBounce[i] = millis();
         Height[i] = StartHeight;
         Position[i] = 0; 
@@ -198,24 +199,29 @@ class Strip
         Dampening[i] = 0.90 - float(i)/pow(BallCount,2); 
       }
       
-      while (true) {
-        for (int i = 0 ; i < BallCount ; i++) {
+      while (true)
+      {
+        for (uint8_t i = 0 ; i < BallCount ; i++)
+        {
           TimeSinceLastBounce[i] =  millis() - ClockTimeSinceLastBounce[i];
           Height[i] = 0.5 * Gravity * pow( TimeSinceLastBounce[i]/1000 , 2.0 ) + ImpactVelocity[i] * TimeSinceLastBounce[i]/1000;
       
-          if ( Height[i] < 0 ) {                      
+          if ( Height[i] < 0 )
+          {                      
             Height[i] = 0;
             ImpactVelocity[i] = Dampening[i] * ImpactVelocity[i];
             ClockTimeSinceLastBounce[i] = millis();
       
-            if ( ImpactVelocity[i] < 0.01 ) {
+            if ( ImpactVelocity[i] < 0.01 )
+            {
               ImpactVelocity[i] = ImpactVelocityStart;
             }
           }
           Position[i] = round( Height[i] * (ledChipCount - 1) / StartHeight);
         }
       
-        for (int i = 0 ; i < BallCount ; i++) {
+        for (int i = 0 ; i < BallCount ; i++)
+        {
           adafruitStrip.setPixelColor(Position[i],colors[i][0],colors[i][1],colors[i][2]);
         }
         
@@ -224,35 +230,44 @@ class Strip
       }
     }
 
-    void FireEffect(int Cooling, int Sparking, int SpeedDelay) {
-      static byte heat[100];
-      int cooldown;
+    // ------------------------------------------------------------------------------------------ fireEffect
+    void fireEffect(uint8_t Cooling, uint8_t Sparking, uint8_t SpeedDelay)
+    {
+      static uint8_t heat[100];
+      uint16_t cooldown;
       
       // Step 1.  Cool down every cell a little
-      for( int i = 0; i < ledChipCount; i++) {
+      for( int i = 0; i < ledChipCount; i++)
+      {
         cooldown = random(0, ((Cooling * 10) / ledChipCount) + 2);
         
-        if(cooldown>heat[i]) {
-          heat[i]=0;
-        } else {
-          heat[i]=heat[i]-cooldown;
+        if( cooldown > heat[i] )
+        {
+          heat[i] = 0;
+        }
+        else
+        {
+          heat[i] = heat[i] - cooldown;
         }
       }
       
       // Step 2.  Heat from each cell drifts 'up' and diffuses a little
-      for(int k = ledChipCount - 1; k >= 2; k--) {
+      for(uint16_t k = ledChipCount - 1; k >= 2; k--)
+      {
         heat[k] = (heat[k - 1] + heat[k - 2] + heat[k - 2]) / 3;
       }
         
       // Step 3.  Randomly ignite new 'sparks' near the bottom
-      if( random(255) < Sparking ) {
-        int y = random(7);
+      if( random(255) < Sparking )
+      {
+        uint8_t y = random(7);
         heat[y] = heat[y] + random(160,255);
         //heat[y] = random(160,255);
       }
     
       // Step 4.  Convert heat to LED colors
-      for( int j = 0; j < ledChipCount; j++) {
+      for( uint16_t j = 0; j < ledChipCount; j++)
+      {
         setPixelHeatColor(j, heat[j]);
       }
     
@@ -260,20 +275,26 @@ class Strip
       delay(SpeedDelay);
     }
     
-    void setPixelHeatColor (int Pixel, byte temperature) {
+    void setPixelHeatColor (uint16_t Pixel, uint8_t temperature)
+    {
       // Scale 'heat' down from 0-255 to 0-191
-      byte t192 = round((temperature/255.0)*191);
+      uint8_t t192 = round((temperature/255.0)*191);
      
       // calculate ramp up from
-      byte heatramp = t192 & 0x3F; // 0..63
-      heatramp <<= 2; // scale up to 0..252
+      uint8_t heatramp = t192 & 0x3F;       // 0..63
+      heatramp <<= 2;                       // scale up to 0..252
      
       // figure out which third of the spectrum we're in:
-      if( t192 > 0x80) {                     // hottest
+      if( t192 > 0x80)                                    // hottest
+      {
         adafruitStrip.setPixelColor(Pixel, 255, 255, heatramp);
-      } else if( t192 > 0x40 ) {             // middle
+      }
+      else if( t192 > 0x40 )                              // middle
+      {
         adafruitStrip.setPixelColor(Pixel, 255, heatramp, 0);
-      } else {                               // coolest
+      }
+      else                                                // coolest
+      {
         adafruitStrip.setPixelColor(Pixel, heatramp, 0, 0);
       }
     }
@@ -290,7 +311,7 @@ class Strip
       if(fromEEPROM)
         effectDelay = _speed;
       else
-        effectDelay = constrain(255 - _speed, 1, 254);
+        effectDelay = constrain(255 - _speed, 5, 255);
         
     }
 
@@ -395,11 +416,16 @@ class Strip
     
     void saveConfigToEEPROM()
     {
+      // after new config checks ( for some effects this is needed to make user experience maximal)
+      if(effectCode == METEOR){ effectDelay = constrain( effectDelay, 5, 125 );} // doesnt work wery well on other settings
+      
       EEPROM.write(indexOfThisStrip * OFFSET_TO_NEXT_STRIP_DATA + EFFECT_ADDRESS, effectCode);
       EEPROM.write(indexOfThisStrip * OFFSET_TO_NEXT_STRIP_DATA + SPEED_ADDRESS, effectDelay);
       EEPROM.write(indexOfThisStrip * OFFSET_TO_NEXT_STRIP_DATA + BRIGHTNESS_ADDRESS, effectBrightness);
       EEPROMWrite_uint32_t(indexOfThisStrip * OFFSET_TO_NEXT_STRIP_DATA + COLOR_ADDRESS, effectColor);
       EEPROM.commit();
+      Serial.print("SAVED VALUES TO EEPROM FOR STRIP ");
+      Serial.println(indexOfThisStrip);
     }
 
     void setDefaultConfig()

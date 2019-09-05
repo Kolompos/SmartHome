@@ -1,5 +1,5 @@
 #allDiv{
-	width: 100%;
+	width: 98%;
 	padding: 1% 1%;
 	background: #dddddd;
 	border-radius: 15px;
@@ -116,4 +116,13 @@ input[type="radio"] {
 	background: #bbbbbb; /* grey background */
 	margin: 1px 15px;
 	border-radius: 10px;
+}
+
+.textOnSlider{
+	pointer-events: none;
+	position: relative;
+	bottom: 45px;
+	left: 10px;
+	font-size: 38px;
+	font-weight: bold;
 }

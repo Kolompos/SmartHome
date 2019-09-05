@@ -7,6 +7,7 @@
 #include <FS.h>
 #include <WiFiUdp.h>
 #include <NTPClient.h>
+#include "IgnoredDefines.h"
 
 // ------------------------------------------------------------------------------------------ OBJECTS
 ESP8266WebServer server(80);
@@ -14,15 +15,12 @@ WiFiUDP ntpUDP;
 NTPClient timeClient(ntpUDP, "europe.pool.ntp.org", 7200, 60000);     // protocol, poolServerName, timeOffset in seconds, updateInterval in millis
 
 // ------------------------------------------------------------------------------------------ DEFINES
-#define WIFI_SSID "Mha Hart Mah Sole"
-//#define WIFI_PW  "aezakmi123"
-
 // requires support on windows 10 which is not state of the art yet...
 //#define MDNS_ADDRESS "ESPI"
 
-//#define HEARTBEAT_PERIOD 120000 // in ms - All of a sudden started causing CPU crash after implementing EEPROM read on startup:/
+#define HEARTBEAT_PERIOD 120000 // in ms
 #ifdef HEARTBEAT_PERIOD
-  uint32_t timer;
+  uint32_t timer = HEARTBEAT_PERIOD;
 #endif
 
 // EEPROM
@@ -33,15 +31,6 @@ NTPClient timeClient(ntpUDP, "europe.pool.ntp.org", 7200, 60000);     // protoco
 #define SPEED_ADDRESS                   9
 #define BRIGHTNESS_ADDRESS              10
 #define OFFSET_TO_NEXT_STRIP_DATA       10
-
-// strips settings
-#define NUMBER_OF_STRIPS                2
-
-#define LOGO_PIN                        D4
-#define LOGO_LED_COUNT                  14
-
-#define FRAME_PIN                       D3
-#define FRAME_LED_COUNT                 104
 
 // ------------------------------------------------------------------------------------------ VARIABLES
 uint32_t lastCommandEpochTick, seedGlobal;
@@ -128,7 +117,6 @@ void loop(void)
   #endif
   
   server.handleClient();
-  timeClient.update();
 
   seedGlobal = micros();
   
@@ -162,17 +150,31 @@ void loop(void)
         Serial.println(strips[index].getConfigAsURL());
       }
     }
+    else if (command == (uint8_t)'o')
+    {
+      for(uint8_t index = 0; index < NUMBER_OF_STRIPS; index++)
+      {
+        strips[index].setEffect(0);
+      }
+    }
     
   }
   
   #ifdef HEARTBEAT_PERIOD
     if(millis() > timer)
     {
+      timeClient.update();
       timer = millis() + HEARTBEAT_PERIOD;
-      Serial.print("Elapsed minutes: ");
+      
+      Serial.print("Elapsed minutes since boot: ");
       Serial.println(millis()/60000);
+      Serial.print("Time from NTP server: ");
+      Serial.println(timeClient.getFormattedTime());
+      /* 
+      // All of a sudden started causing CPU crash after implementing EEPROM read on startup:/
       Serial.print("Free bytes in RAM: ");
       Serial.println(system_get_free_heap_size());
+      */
     }
    #endif
 }

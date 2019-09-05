@@ -31,18 +31,6 @@ bool handleFileRead(String _path, bool _hasArgs)      // send the right file to 
   // this redirects us to the parametered index page if the data is valid and there are no args already
   if(isCommandValid && !_hasArgs && _path.endsWith("index.html"))
   {
-    // TODO: this will be unbearable later on, do something with this... make a getUrlCode() function or someting
-    /*
-    String url = "/index.html?LR=";
-    url += stripLogo.getColor(R);
-    url += "&LG=";
-    url += stripLogo.getColor(G);
-    url += "&LB=";
-    url += stripLogo.getColor(B);
-    url += "&LE=";
-    url += stripLogo.getEffect();
-    */
-    
     String url = "/index.html?";
     for(uint8_t index = 0; index < NUMBER_OF_STRIPS; index++)
     {
@@ -79,11 +67,7 @@ void handleCommand() {
     //strip number is coded in the offset 9 / 10 == 0              ||| setConfigTo(config number as defined, config value)
     strips[server.argName(index).toInt() / URL_OFFSET_TO_NEXT_STRIP].setConfigTo(server.argName(index).toInt() % URL_OFFSET_TO_NEXT_STRIP,server.arg(index).toInt());
   }
-  // TODO: make a function in strip class that gets the args and sets itself
-  // TODO: also make an API or at least make a little bit fool proof the command syntax and parameter order
-  //stripLogo.setColor(server.arg(0).toInt(),server.arg(1).toInt(),server.arg(2).toInt());
-  //stripLogo.setEffect(server.arg(3).toInt());
-  
+
   for(uint8_t index = 0; index < NUMBER_OF_STRIPS; index++)
   {
     strips[index].saveConfigToEEPROM();
@@ -93,7 +77,7 @@ void handleCommand() {
 
   message += "Redirecting to previous page...";
   // this is a html code that auto executes on load of the page and calls another function delayed by  V this value, that redirects us to the previous page.
-  message += "<script>function onLoadFunction(){setTimeout(function(){ window.location.href=\"/\";}, 500); } </script>";
+  message += "<script>function onLoadFunction(){setTimeout(function(){ window.location.href=\"/\";}, 100); } </script>";
   
   message += "</body></html>";
   server.send(200, "text/html", message);

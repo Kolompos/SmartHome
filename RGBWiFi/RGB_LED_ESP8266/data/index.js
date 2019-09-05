@@ -8,52 +8,30 @@ const URL_INDEX_OF_B                  	= 7;
 const JS_INDEX_OF_BUTTON				= 9;
 const URL_OFFSET_TO_NEXT_STRIP        	= 10;
 
-//const LOGO_URL_OFFSET					= 0 * URL_OFFSET_TO_NEXT_STRIP;
-//const FRAME_URL_OFFSET					= 1 * URL_OFFSET_TO_NEXT_STRIP;
-
-
 //EXPAND
-var elementsLogo = [
-		0,
-		document.getElementsByName("logo"),
-		document.getElementById("rangeLogoSpeed"),
-		document.getElementById("rangeLogoBrightness"),
-		0,
-		document.getElementById("rangeLogoR"),
-		document.getElementById("rangeLogoG"),
-		document.getElementById("rangeLogoB"),
-		0,
-		document.getElementById("buttonLogo")
-];
+const ELEMENTS_NUMBER					= 2;
 
-var elementsFrame = [
+var elementsAll = [];
+let i;
+for(i = 0; i < ELEMENTS_NUMBER; i++){
+	elementsAll[i] = [
 		0,
-		document.getElementsByName("frame"),
-		document.getElementById("rangeFrameSpeed"),
-		document.getElementById("rangeFrameBrightness"),
+		document.getElementsByName("radio" + i),
+		document.getElementById("rangeSpeed" + i),
+		document.getElementById("rangeBrightness" + i),
 		0,
-		document.getElementById("rangeFrameR"),
-		document.getElementById("rangeFrameG"),
-		document.getElementById("rangeFrameB"),
+		document.getElementById("rangeR" + i),
+		document.getElementById("rangeG" + i),
+		document.getElementById("rangeB" + i),
 		0,
-		document.getElementById("buttonFrame")
-];
-
-//EXPAND
-var elementsAll = [ elementsLogo , elementsFrame ];
+		document.getElementById("button" + i)
+	];
+}
 
 var currentURL = new URL(document.URL);
 
 function onInput(_id){
-	//EXPAND
-	switch(_id){
-		case "sliderContainerLogo":
-			changeColor(0);
-			break;
-		case "sliderContainerFrame":
-			changeColor(1);
-			break;
-	}
+	changeColor(_id.replace("sliderContainer",""));
 }
 function changeColor(_index){
 	let _sliderR = elementsAll[_index][URL_INDEX_OF_R];
@@ -121,14 +99,13 @@ function onLoadFunction() {
 	}
 	for(i = 0; i < elementsAll.length; i++) {
 		changeColor(i);
+		rangeBrightness("rangeBrightness" + i);
+		rangeSpeed("rangeSpeed" + i);
 	}
-	
-	//EXPAND
-	rangeBrightness("rangeLogoBrightness");
-	rangeBrightness("rangeFrameBrightness");
 }
 
 function buttonClick(_index){
+	_index = _index.replace("button","");
 	if(_index == 999){
 		let redirectLink = "/command?";
 		let i;
@@ -143,7 +120,7 @@ function buttonClick(_index){
 	window.location.href = "/command?" + getURLOf(_index);
 }
 
-/*
+/* HELPER
 const URL_INDEX_OF_EFFECT             = 1;
 const URL_INDEX_OF_SPEED              = 2;
 const URL_INDEX_OF_BRIGHTNESS         = 3;
@@ -189,4 +166,14 @@ function rangeBrightness(id){
 		value = "0" + value;
 	range.style.background = "#" + value + value + value;
 	
+}
+
+function rangeSpeed(id){ 
+	let range = document.getElementById(id);
+	id = id.replace("Speed","").replace("range","");
+	id = "textOnSlider" + id;
+	let textField = document.getElementById(id); 
+	
+	let value = parseInt(range.value, 10);
+	textField.textContent = value;
 }
