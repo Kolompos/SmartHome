@@ -14,6 +14,7 @@
 #define RANDOMFILL	  9
 #define MIDDLEFILL	  10
 #define SIDEFILL	    11
+#define YINYANG       12
 
 // EFFECT DEFINES
 #define BALL_COUNT    3
@@ -110,8 +111,11 @@ class Strip
     			  middleFillDrain(_seed); // Light up the strip starting from the middle, then reverse
     		    break;
     		  case SIDEFILL:
-    			  sideFillDrain(_seed); // Light up the strip starting from the sides, then reverse
-    		    break;
+            sideFillDrain(_seed); // Light up the strip starting from the sides, then reverse
+            break;
+          case YINYANG:
+            yinYang(_seed);
+            break;
           default:  //when unconfigured set the leds off
             adafruitStrip.clear();
             renderable = false;
@@ -479,6 +483,27 @@ class Strip
       }
   	}
 
+    // ------------------------------------------------------------------------------------------ yinYang
+    void yinYang(uint32_t _seed)
+    {
+      _seed = _seed >> 6;
+      
+      if(firstRender)
+      {
+        adafruitStrip.clear();
+        effectIndex = 0;
+        lastRender = _seed - 1;
+        filling = true;
+        firstRender = false;
+      }
+      
+      if(_seed > lastRender)
+      {
+        
+        lastRender = _seed + 100;
+      }
+    }
+    
     // ------------------------------------------------------------------------------------------ SET CONFIG FUNCTIONS
     void setEffect(uint8_t _effect)
     {
