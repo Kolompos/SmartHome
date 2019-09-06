@@ -11,6 +11,9 @@
 #define METEOR        6
 #define BOUNCINGBALL  7
 #define FIRE          8
+#define RANDOMFILL	  9
+#define MIDDLEFILL	  10
+#define SIDEFILL	  11
 
 // EFFECT DEFINES
 #define BALL_COUNT    3
@@ -100,6 +103,16 @@ class Strip
           case FIRE:
             fireEffect(55,120); //uint8_t _cooldownRate, uint8_t _sparkProbability
             break;
+		  case RANDOMFILL:
+		    randomPositionFill(_seed,10); //uint32_t c, uint8_t wait // pick a random LED to light up until entire strip is lit
+		    break;
+		  case MIDDLEFILL:
+			middleFill(_seed, 10); //uint32_t c, uint8_t wait // Light up the strip starting from the middle
+		    break;
+		  case SIDEFILL:
+			sideFill(_seed,10); //uint32_t c, uint8_t wait // Light up the strip starting from the sides
+		    break;
+		  case 
           default:  //when unconfigured set the leds off
             adafruitStrip.clear();
             renderable = false;
@@ -329,6 +342,70 @@ class Strip
         adafruitStrip.setPixelColor(Pixel, heatramp, 0, 0);
       }
     }
+	
+	// ---------------------------------------------------------- RANDOMFILL
+	// pick a random LED to light up until entire strip is lit
+	void randomPositionFill(uint32_t c, uint8_t wait) {
+	  adafruitStrip.clear();
+	 
+	  int used[ledChipCount]; // array to keep track of lit LEDs
+	  int lights = 0; // counter
+	 
+	  for(int i = 0; i<ledChipCount; i++){ // fill array with 0
+		used[i] = 0;
+	  }
+	 
+	  while(lights<ledChipCount-1) {
+		int j = random(0,ledChipCount-1); // pick a random LED
+		if(used[j] != 1){ // if LED not already lit, proceed
+		  adafruitStrip.setPixelColor(j, c);
+		  used[j] = 1; // update array to remember it is lit
+		  lights++;
+		  adafruitStrip.show(); // display
+		  delay(wait);
+		}
+	  }
+	}
+	
+	// ---------------------------------------------------------- MIDDLEFILL
+	// Light up the strip starting from the middle
+	void middleFill(uint32_t c, uint8_t wait) {
+      adafruitStrip.clear();
+	 
+	  for(uint16_t i=0; i<(ledChipCount/2); i++) { // start from the middle, lighting an LED on each side
+		adafruitStrip.setPixelColor(ledChipCount/2 + i, c);
+		adafruitStrip.setPixelColor(ledChipCount/2 - i, c);
+        adafruitStrip.show();
+		delay(wait);
+	  }
+	 
+	  for(uint16_t i=0; i<(ledChipCount/2); i++) { // reverse
+		adafruitStrip.setPixelColor(i, 0);
+		adafruitStrip.setPixelColor(ledChipCount - i, 0);
+        adafruitStrip.show();
+		delay(wait);
+	  }
+	}
+	
+	// --------------------------------------------------------- SIDEFILL
+	// Light up the strip starting from the sides
+	void sideFill(uint32_t c, uint8_t wait) {
+      adafruitStrip.clear();
+
+	  for(uint16_t i=0; i<(ledChipCount/2); i++) { // fill strip from sides to middle
+		adafruitStrip.setPixelColor(i, c);
+		adafruitStrip.setPixelColor(ledChipCount - i, c);
+        adafruitStrip.show();
+		delay(wait);
+	  }
+
+	  for(uint16_t i=0; i<(ledChipCount/2); i++) { // reverse
+		adafruitStrip.setPixelColor(ledChipCount/2 + i, 0);
+		adafruitStrip.setPixelColor(ledChipCount/2 - i, 0);
+        adafruitStrip.show();
+		delay(wait);
+	  }
+	}
 
     // ------------------------------------------------------------------------------------------ SET CONFIG FUNCTIONS
     void setEffect(uint8_t _effect)
