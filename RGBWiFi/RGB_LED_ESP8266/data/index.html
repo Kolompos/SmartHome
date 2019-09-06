@@ -1,6 +1,7 @@
 <html>
 	<head>
 		<link rel="stylesheet" type="text/css" href="index.css">
+		<link rel="shortcut icon" href="favicon.gif" />
 	</head>
 	<body style='font-family: sans-serif; font-size: 12px' onload="onLoadFunction()">
 		<div id="allDiv">
@@ -13,18 +14,28 @@
 					<input type="range" id="rangeB0" min="0" max="255" value="10" class="blue slider">
 					<input type="range" id="rangeBrightness0" min="0" max="255" value="100" class="brightness slider" oninput="rangeBrightness(this.id)">
 					<input type="range" id="rangeSpeed0" min="0" max="250" value="200" class="speed slider" oninput="rangeSpeed(this.id)">
-					<div id="textOnSlider0" class="textOnSlider">---</div>
+					<div id="textOnBrightness0" class="textOnSlider">BRIGHTNESS</div>
+					<div id="textOnSpeed0" class="textOnSlider">---</div>
 				</div>
 				<div class="radioContainer" id="radioContainer0">
-					<label class="label"><input type="radio" name="radio0"> OFF</label>
-					<label class="label"><input type="radio" name="radio0"> STATIC</label>
-					<label class="label"><input type="radio" name="radio0"> BREATHE</label>
-					<label class="label"><input type="radio" name="radio0"> ANTIBREATHE</label>
-					<label class="label"><input type="radio" name="radio0"> RAINBOW</label>
-					<label class="label"><input type="radio" name="radio0"> WAVE</label>
-					<label class="label"><input type="radio" name="radio0"> METEOR</label>
-					<label class="label"><input type="radio" name="radio0"> BOUNCINGBALL</label>
-					<label class="label"><input type="radio" name="radio0"> FIRE</label>
+					<div><input type="radio" id="radio00" name="radio0"/>
+					<label class="label" for="radio00">OFF</label></div>
+					<div><input type="radio" id="radio01" name="radio0"/>
+					<label class="label" for="radio01">STATIC</label></div>
+					<div><input type="radio" id="radio02" name="radio0"/>
+					<label class="label" for="radio02">BREATHE</label></div>
+					<div><input type="radio" id="radio03" name="radio0"/>
+					<label class="label" for="radio03">ANTIBREATHE</label></div>
+					<div><input type="radio" id="radio04" name="radio0"/>
+					<label class="label" for="radio04">RAINBOW</label></div>
+					<div><input type="radio" id="radio05" name="radio0"/>
+					<label class="label" for="radio05">WAVE</label></div>
+					<div><input type="radio" id="radio06" name="radio0"/>
+					<label class="label" for="radio06">METEOR</label></div>
+					<div><input type="radio" id="radio07" name="radio0"/>
+					<label class="label" for="radio07">BOUNCINGBALL</label></div>
+					<div><input type="radio" id="radio08" name="radio0"/>
+					<label class="label" for="radio08">FIRE</label></div>
 				</div>
 				<button type="button" id="button0" class="button" onclick="buttonClick(this.id)">COMMIT COLOR AND EFFECT FOR THIS STRIP</button>
 			</div>
@@ -37,18 +48,28 @@
 					<input type="range" id="rangeB1" min="0" max="255" value="10" class="blue slider">
 					<input type="range" id="rangeBrightness1" min="0" max="255" value="100" class="brightness slider" oninput="rangeBrightness(this.id)">
 					<input type="range" id="rangeSpeed1" min="0" max="250" value="200" class="speed slider" oninput="rangeSpeed(this.id)">
-					<div id="textOnSlider1" class="textOnSlider">---</div>
+					<div id="textOnBrightness1" class="textOnSlider">BRIGHTNESS</div>
+					<div id="textOnSpeed1" class="textOnSlider">---</div>
 				</div>
 				<div class="radioContainer" id="radioContainer1">
-					<label class="label"><input type="radio" name="radio1"> OFF</label>
-					<label class="label"><input type="radio" name="radio1"> STATIC</label>
-					<label class="label"><input type="radio" name="radio1"> BREATHE</label>
-					<label class="label"><input type="radio" name="radio1"> ANTIBREATHE</label>
-					<label class="label"><input type="radio" name="radio1"> RAINBOW</label>
-					<label class="label"><input type="radio" name="radio1"> WAVE</label>
-					<label class="label"><input type="radio" name="radio1"> METEOR</label>
-					<label class="label"><input type="radio" name="radio1"> BOUNCINGBALL</label>
-					<label class="label"><input type="radio" name="radio1"> FIRE</label>
+					<div><input type="radio" id="radio10" name="radio1"/>
+					<label class="label" for="radio10">OFF</label></div>
+					<div><input type="radio" id="radio11" name="radio1"/>
+					<label class="label" for="radio11">STATIC</label></div>
+					<div><input type="radio" id="radio12" name="radio1"/>
+					<label class="label" for="radio12">BREATHE</label></div>
+					<div><input type="radio" id="radio13" name="radio1"/>
+					<label class="label" for="radio13">ANTIBREATHE</label></div>
+					<div><input type="radio" id="radio14" name="radio1"/>
+					<label class="label" for="radio14">RAINBOW</label></div>
+					<div><input type="radio" id="radio15" name="radio1"/>
+					<label class="label" for="radio15">WAVE</label></div>
+					<div><input type="radio" id="radio16" name="radio1"/>
+					<label class="label" for="radio16">METEOR</label></div>
+					<div><input type="radio" id="radio17" name="radio1"/>
+					<label class="label" for="radio17">BOUNCINGBALL</label></div>
+					<div><input type="radio" id="radio18" name="radio1"/>
+					<label class="label" for="radio18">FIRE</label></div>
 				</div>
 				<button type="button" id="button1" class="button" onclick="buttonClick(this.id)">COMMIT COLOR AND EFFECT FOR THIS STRIP</button>
 			</div>
@@ -61,18 +82,28 @@
 					<input type="range" id="rangeB2" min="0" max="255" value="10" class="blue slider">
 					<input type="range" id="rangeBrightness2" min="0" max="255" value="100" class="brightness slider" oninput="rangeBrightness(this.id)">
 					<input type="range" id="rangeSpeed2" min="0" max="250" value="200" class="speed slider" oninput="rangeSpeed(this.id)">
-					<div id="textOnSlider2" class="textOnSlider">---</div>
+					<div id="textOnBrightness2" class="textOnSlider">BRIGHTNESS</div>
+					<div id="textOnSpeed2" class="textOnSlider">---</div>
 				</div>
 				<div class="radioContainer" id="radioContainer2">
-					<label class="label"><input type="radio" name="radio2"> OFF</label>
-					<label class="label"><input type="radio" name="radio2"> STATIC</label>
-					<label class="label"><input type="radio" name="radio2"> BREATHE</label>
-					<label class="label"><input type="radio" name="radio2"> ANTIBREATHE</label>
-					<label class="label"><input type="radio" name="radio2"> RAINBOW</label>
-					<label class="label"><input type="radio" name="radio2"> WAVE</label>
-					<label class="label"><input type="radio" name="radio2"> METEOR</label>
-					<label class="label"><input type="radio" name="radio2"> BOUNCINGBALL</label>
-					<label class="label"><input type="radio" name="radio2"> FIRE</label>
+					<div><input type="radio" id="radio20" name="radio2"/>
+					<label class="label" for="radio20">OFF</label></div>
+					<div><input type="radio" id="radio21" name="radio2"/>
+					<label class="label" for="radio21">STATIC</label></div>
+					<div><input type="radio" id="radio22" name="radio2"/>
+					<label class="label" for="radio22">BREATHE</label></div>
+					<div><input type="radio" id="radio23" name="radio2"/>
+					<label class="label" for="radio23">ANTIBREATHE</label></div>
+					<div><input type="radio" id="radio24" name="radio2"/>
+					<label class="label" for="radio24">RAINBOW</label></div>
+					<div><input type="radio" id="radio25" name="radio2"/>
+					<label class="label" for="radio25">WAVE</label></div>
+					<div><input type="radio" id="radio26" name="radio2"/>
+					<label class="label" for="radio26">METEOR</label></div>
+					<div><input type="radio" id="radio27" name="radio2"/>
+					<label class="label" for="radio27">BOUNCINGBALL</label></div>
+					<div><input type="radio" id="radio28" name="radio2"/>
+					<label class="label" for="radio28">FIRE</label></div>
 				</div>
 				<button type="button" id="button2" class="button" onclick="buttonClick(this.id)">COMMIT COLOR AND EFFECT FOR THIS STRIP</button>
 			</div>

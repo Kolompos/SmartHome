@@ -132,9 +132,9 @@ void loop(void)
   #ifdef MDNS_ADDRESS
     MDNS.update();
   #endif
-  
-  server.handleClient();
 
+  server.handleClient();
+  
   seedGlobal = micros();
   
   for(uint8_t index = 0; index < NUMBER_OF_STRIPS; index++)

@@ -66,13 +66,11 @@ class Strip
         {
           case OFF:
             adafruitStrip.clear();
-            adafruitStrip.show();
             renderable = false;
             break; 
           case STATIC:
             adafruitStrip.fill(effectColor, 0, ledChipCount);
             adafruitStrip.setBrightness( effectBrightness );
-            adafruitStrip.show();
             renderable = false;
             break; 
           case BREATHE:
@@ -81,20 +79,17 @@ class Strip
             //                    / 1000.0 scales down the changeing speed of the millis() function
             //                    + 1 offsets from sine's -1 .. +1 interval to 0 .. +2
             //                    * 127 scales up to full 254 interval
-            adafruitStrip.setBrightness( 1 + (sin( _seed / 10000.0) + 1) * 127 );
-            adafruitStrip.show();
+            adafruitStrip.setBrightness( map( 1 + ( sin( _seed / 10000.0) + 1) * 127 , 0 , 255 , 0 , effectBrightness));
             break;
           case ANTIBREATHE:
             adafruitStrip.fill(effectColor, 0, ledChipCount);
-            adafruitStrip.setBrightness( 1 + (-sin( _seed / 10000.0) + 1) * 127 );
-            adafruitStrip.show();
+            adafruitStrip.setBrightness( map( 1 + ( -sin( _seed / 10000.0) + 1) * 127 , 0 , 255 , 0 , effectBrightness));
             break;
           case RAINBOW:
-            renderRainbow(_seed);
+            rainbowEffect(_seed);
             break; 
           case WAVE:
-            // TODO: implement
-            adafruitStrip.show();
+            waveEffect(_seed);
             break;
           case METEOR:
             meteorRain(_seed, 6, 64, true); //uint32_t _seed, uint8_t meteorSize, uint8_t meteorTrailDecay, boolean meteorRandomDecay
@@ -107,29 +102,63 @@ class Strip
             break;
           default:  //when unconfigured set the leds off
             adafruitStrip.clear();
-            adafruitStrip.show();
             renderable = false;
         }
+        adafruitStrip.show();
       }
     }
     
     // ------------------------------------------------------------------------------------------ EFFECT FUNCTIONS
-    // ------------------------------------------------------------------------------------------ renderRainbow
-    void renderRainbow(uint32_t _seed)
+    // ------------------------------------------------------------------------------------------ rainbowEffect
+    void rainbowEffect(uint32_t _seed)
     {
-    	uint8_t j = (_seed >> 12) & 255;
+      uint8_t j = (_seed >> 12) & 255;
       uint8_t ij;
-    	for(uint16_t i = 0; i < ledChipCount; i++)
-    	{
-    	  ij = 255 - ((i + j) & 255);
-    	  if(ij < 85)
-    		adafruitStrip.setPixelColor(i, 255 - ij * 3, 0, ij * 3);
-    	  else if(ij < 170)
-    		adafruitStrip.setPixelColor(i, 0, (ij - 85) * 3, 255 - (ij - 85) * 3);
-    	  else
-    		adafruitStrip.setPixelColor(i, (ij -170) * 3, 255 - (ij -170) * 3, 0);
-    	}
-      adafruitStrip.show();
+      for(uint16_t i = 0; i < ledChipCount; i++)
+      {
+        ij = 255 - ((i + j) & 255);
+        if(ij < 85)
+        adafruitStrip.setPixelColor(i, 255 - ij * 3, 0, ij * 3);
+        else if(ij < 170)
+        adafruitStrip.setPixelColor(i, 0, (ij - 85) * 3, 255 - (ij - 85) * 3);
+        else
+        adafruitStrip.setPixelColor(i, (ij -170) * 3, 255 - (ij -170) * 3, 0);
+      }
+    }
+    
+    // ------------------------------------------------------------------------------------------ waveEffect
+    uint16_t *sinTable;
+    uint8_t rgb[3] = {0, 0, 0};
+    
+    void waveEffect(uint32_t _seed)
+    {
+      _seed = _seed >> 2;
+      
+      if(firstRender)
+      {
+        rgb[0] = effectColor >> 16;
+        rgb[1] = effectColor >> 8;
+        rgb[2] = effectColor;
+        firstRender = false;
+      }
+      
+      // you can add more offset and modify the parameters 111 and 169, they are random
+      uint8_t sinOffset0 = (_seed / 111) & 255;
+      uint8_t sinOffset1 = (_seed / 169) & 255;
+
+      for(uint16_t sinTime = 0; sinTime < ledChipCount; sinTime++)
+      {
+        // in this example you have 2 sine functions parametered like sin(w*t+fi) (general high school stuff)
+        
+        // those offsets from above are used in the parametering of these sine functions
+        // more sine functions can be multiplied together but you have to divide back with each of them at the end
+        // sinTable is a uint16_t array, so the '>> 8' makes them uint8_t again.
+        // each multiplication means an addition in bit length, so uint8_t * uint8_t makes uint16_t (dont forget to increase variable size when adding more functions)
+        uint16_t sumFunction = (sinTable[(2 * sinTime + sinOffset0) & 255] >> 8) * (sinTable[-(5 * sinTime + sinOffset1) & 255] >> 8); // i named it sum functions, for you math savvys, i know it's a product
+
+        // here you multiply that uint16_t and the uint8_t R G and B values (which would make a 24 bit number), so to make them uint8_t again you make an '>> 16'
+        adafruitStrip.setPixelColor(sinTime, (rgb[0] * sumFunction) >> 16, (rgb[1] * sumFunction) >> 16, (rgb[2] * sumFunction) >> 16);
+      }
     }
 
     // ------------------------------------------------------------------------------------------ meteorRain
@@ -155,7 +184,6 @@ class Strip
         } 
       }
      
-      adafruitStrip.show();
     }
     
     void fadeToBlack(uint16_t ledNo, uint8_t fadeValue)
@@ -192,6 +220,7 @@ class Strip
     
     void bouncingColoredBalls(uint32_t _seed)
     {
+      adafruitStrip.clear();
       _seed = _seed >> 8;
 
       if(firstRender)
@@ -231,10 +260,6 @@ class Strip
       {
         adafruitStrip.setPixelColor(Position[i],colors[i][0],colors[i][1],colors[i][2]);
       }
-      
-      adafruitStrip.show();
-      adafruitStrip.clear();
-      
     }
 
     // ------------------------------------------------------------------------------------------ fireEffect
@@ -277,8 +302,7 @@ class Strip
       {
         setPixelHeatColor(j, heat[j]);
       }
-    
-      adafruitStrip.show();
+      
       delay(effectDelay);
     }
     
@@ -447,6 +471,9 @@ class Strip
       firstRender = true;
       renderable = true;
 
+      // these are here to save memory
+      // later on when technology goes by me and my old views, you could technically make these reserved the whole time... 
+      // but to know me, I like to save every byte of RAM
       if(effectCode == FIRE && heat == NULL)
       {
         heat = new uint8_t[ledChipCount];
@@ -456,6 +483,22 @@ class Strip
         delete[] heat;
         heat = NULL;
       }
+      
+      if(effectCode == WAVE && sinTable == NULL)
+      {
+        sinTable = new uint16_t[256];
+        for(uint16_t i = 0; i < 256; i++)
+        {
+          sinTable[i] = sin(3.1415 / 128 * i) * 0x7fff + 0x8000;
+        }
+      }
+      else if(effectCode != WAVE && sinTable != NULL)
+      {
+        delete[] sinTable;
+        sinTable = NULL;
+      }
+
+      
     }
 
     void afterNewConfigChecks()

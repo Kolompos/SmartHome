@@ -171,9 +171,9 @@ function rangeBrightness(id){
 function rangeSpeed(id){ 
 	let range = document.getElementById(id);
 	id = id.replace("Speed","").replace("range","");
-	id = "textOnSlider" + id;
+	id = "textOnSpeed" + id;
 	let textField = document.getElementById(id); 
 	
 	let value = parseInt(range.value, 10);
-	textField.textContent = value;
+	textField.textContent = "SPEED: " + value;
 }
