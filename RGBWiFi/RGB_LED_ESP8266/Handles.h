@@ -22,7 +22,10 @@ bool handleFileRead(String _path, bool _hasArgs)      // send the right file to 
   else
     isCommandValid = false;
     
-  Serial.println("handleFileRead: " + _path);
+  #ifdef VERBOSE_MODE
+    Serial.println("handleFileRead: " + _path);
+  #endif
+  
   if (_path.endsWith("/"))
   {
     _path += "index.html";                            // If a folder is requested, send the index file
@@ -52,7 +55,11 @@ bool handleFileRead(String _path, bool _hasArgs)      // send the right file to 
     file.close();                                       // Then close the file again
     return true;
   }
-  Serial.println("\tFile Not Found");
+  
+  #ifdef VERBOSE_MODE
+    Serial.println("\tFile Not Found");
+  #endif
+  
   return false;                                         // If the file doesn't exist, return false
 }
 

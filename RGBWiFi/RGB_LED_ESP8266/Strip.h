@@ -13,7 +13,7 @@
 #define FIRE          8
 #define RANDOMFILL	  9
 #define MIDDLEFILL	  10
-#define SIDEFILL	  11
+#define SIDEFILL	    11
 
 // EFFECT DEFINES
 #define BALL_COUNT    3
@@ -103,16 +103,15 @@ class Strip
           case FIRE:
             fireEffect(55,120); //uint8_t _cooldownRate, uint8_t _sparkProbability
             break;
-		  case RANDOMFILL:
-		    randomPositionFill(_seed,10); //uint32_t c, uint8_t wait // pick a random LED to light up until entire strip is lit
-		    break;
-		  case MIDDLEFILL:
-			middleFill(_seed, 10); //uint32_t c, uint8_t wait // Light up the strip starting from the middle
-		    break;
-		  case SIDEFILL:
-			sideFill(_seed,10); //uint32_t c, uint8_t wait // Light up the strip starting from the sides
-		    break;
-		  case 
+    		  case RANDOMFILL:
+    		    randomFillDrain(_seed); // pick a random LED to light up until entire strip is lit, then reverse
+    		    break;
+    		  case MIDDLEFILL:
+    			  middleFillDrain(_seed); // Light up the strip starting from the middle, then reverse
+    		    break;
+    		  case SIDEFILL:
+    			  sideFillDrain(_seed); // Light up the strip starting from the sides, then reverse
+    		    break;
           default:  //when unconfigured set the leds off
             adafruitStrip.clear();
             renderable = false;
@@ -177,26 +176,37 @@ class Strip
     // ------------------------------------------------------------------------------------------ meteorRain
     void meteorRain(uint32_t _seed, uint8_t meteorSize, uint8_t meteorTrailDecay, boolean meteorRandomDecay) 
     {
-      uint16_t index = (_seed >> 11)  % (ledChipCount + ledChipCount);
-      
-      // fade brightness all LEDs one step
-      for(uint16_t j = 0; j < ledChipCount; j++)
+      if(firstRender)
       {
-        if( (!meteorRandomDecay) || (random( (255 - effectDelay) + 160000) > 155000) ) //80000 and 78000 good candidates
+        adafruitStrip.clear();
+        effectIndex = 0;
+        lastRender = _seed - 1;
+        firstRender = false;
+      }
+      
+      if(_seed > lastRender)
+      {
+        // fade brightness all LEDs one step
+        for(uint16_t j = 0; j < ledChipCount; j++)
         {
-          fadeToBlack( j, meteorTrailDecay );        
+          if( (!meteorRandomDecay) || (random( 10 ) > 5)) //80000 and 78000 good candidates
+          {
+            fadeToBlack( j, meteorTrailDecay );
+          }
         }
-      }
-      
-      // draw meteor
-      for(uint8_t j = 0; j < meteorSize; j++)
-      {
-        if( ( index-j <ledChipCount) && (index-j>=0) )
+        
+        // draw meteor
+        for(uint8_t j = 0; j < meteorSize; j++)
         {
-          adafruitStrip.setPixelColor(index-j, effectColor);
-        } 
+          if( ( effectIndex - j < ledChipCount) && (effectIndex - j>=0) )
+          {
+            adafruitStrip.setPixelColor(effectIndex - j, effectColor);
+          } 
+        }
+        effectIndex++;
+        if(effectIndex == ledChipCount + ledChipCount) effectIndex = 0;
+        lastRender = _seed + 1000;
       }
-     
     }
     
     void fadeToBlack(uint16_t ledNo, uint8_t fadeValue)
@@ -343,69 +353,131 @@ class Strip
       }
     }
 	
-	// ---------------------------------------------------------- RANDOMFILL
-	// pick a random LED to light up until entire strip is lit
-	void randomPositionFill(uint32_t c, uint8_t wait) {
-	  adafruitStrip.clear();
-	 
-	  int used[ledChipCount]; // array to keep track of lit LEDs
-	  int lights = 0; // counter
-	 
-	  for(int i = 0; i<ledChipCount; i++){ // fill array with 0
-		used[i] = 0;
-	  }
-	 
-	  while(lights<ledChipCount-1) {
-		int j = random(0,ledChipCount-1); // pick a random LED
-		if(used[j] != 1){ // if LED not already lit, proceed
-		  adafruitStrip.setPixelColor(j, c);
-		  used[j] = 1; // update array to remember it is lit
-		  lights++;
-		  adafruitStrip.show(); // display
-		  delay(wait);
-		}
-	  }
-	}
-	
-	// ---------------------------------------------------------- MIDDLEFILL
-	// Light up the strip starting from the middle
-	void middleFill(uint32_t c, uint8_t wait) {
-      adafruitStrip.clear();
-	 
-	  for(uint16_t i=0; i<(ledChipCount/2); i++) { // start from the middle, lighting an LED on each side
-		adafruitStrip.setPixelColor(ledChipCount/2 + i, c);
-		adafruitStrip.setPixelColor(ledChipCount/2 - i, c);
-        adafruitStrip.show();
-		delay(wait);
-	  }
-	 
-	  for(uint16_t i=0; i<(ledChipCount/2); i++) { // reverse
-		adafruitStrip.setPixelColor(i, 0);
-		adafruitStrip.setPixelColor(ledChipCount - i, 0);
-        adafruitStrip.show();
-		delay(wait);
-	  }
-	}
-	
-	// --------------------------------------------------------- SIDEFILL
-	// Light up the strip starting from the sides
-	void sideFill(uint32_t c, uint8_t wait) {
-      adafruitStrip.clear();
+    // ------------------------------------------------------------------------------------------ randomFillDrain
+    // pick a random LED to light up until entire strip is lit
 
-	  for(uint16_t i=0; i<(ledChipCount/2); i++) { // fill strip from sides to middle
-		adafruitStrip.setPixelColor(i, c);
-		adafruitStrip.setPixelColor(ledChipCount - i, c);
-        adafruitStrip.show();
-		delay(wait);
-	  }
+    bool *litLEDs;        // array to keep track of lit LEDs
+    uint16_t randomPick;
+    
+    void randomFillDrain(uint32_t _seed)
+    {
+      _seed = _seed >> 6;  // microseconds divided by 1024 is miliseconds
+      
+      if(firstRender)
+      {
+        adafruitStrip.clear();
+        effectIndex = 0;
+        memset(litLEDs, 0, ledChipCount);
+        lastRender = _seed - 1;
+        filling = true;
+        firstRender = false;
+      }
 
-	  for(uint16_t i=0; i<(ledChipCount/2); i++) { // reverse
-		adafruitStrip.setPixelColor(ledChipCount/2 + i, 0);
-		adafruitStrip.setPixelColor(ledChipCount/2 - i, 0);
-        adafruitStrip.show();
-		delay(wait);
-	  }
-	}
+      if(_seed > lastRender)
+      {
+        if(filling)
+        {
+          while(true)
+          {
+            randomPick = random(0 , ledChipCount); // pick a random LED
+            if(litLEDs[randomPick] != true)  // if LED not already lit, proceed
+            { 
+              adafruitStrip.setPixelColor(randomPick, effectColor);
+              litLEDs[randomPick] = true; // update array to remember it is lit
+              effectIndex++;
+              break;
+            }
+          }
+          if(effectIndex == ledChipCount) filling = false;
+        }
+        else
+        {
+          while(true)
+          {
+            randomPick = random(0 , ledChipCount); // pick a random LED
+            if(litLEDs[randomPick] != false)  // if LED already lit, proceed
+            { 
+              adafruitStrip.setPixelColor(randomPick, 0);
+              litLEDs[randomPick] = false; // update array to remember it is lit
+              effectIndex--;
+              break;
+            }
+          }
+          if(effectIndex == 0) filling = true;
+        }
+        lastRender = _seed + 100;
+      }
+    }
+	
+  	// ------------------------------------------------------------------------------------------ middleFillDrain
+  	// Light up the strip starting from the middle
+  	void middleFillDrain(uint32_t _seed)
+  	{
+      _seed = _seed >> 6;
+      
+      if(firstRender)
+      {
+        adafruitStrip.clear();
+        effectIndex = 0;
+        lastRender = _seed - 1;
+        filling = true;
+        firstRender = false;
+      }
+      
+  	  if(_seed > lastRender)
+      {
+        if(filling)
+        {
+          adafruitStrip.setPixelColor(ledChipCount / 2 + effectIndex, effectColor);
+          adafruitStrip.setPixelColor(ledChipCount / 2 - effectIndex, effectColor);
+          effectIndex++;
+          if(effectIndex == ledChipCount / 2) filling = false;
+        }
+        else
+        {
+          adafruitStrip.setPixelColor(effectIndex, 0);
+          adafruitStrip.setPixelColor(ledChipCount - effectIndex, 0);
+          effectIndex--;
+          if(effectIndex == 0) filling = true;
+        }
+        lastRender = _seed + 100;
+      }
+  	}
+  	
+  	// ------------------------------------------------------------------------------------------ sideFillDrain
+  	// Light up the strip starting from the sides
+  	void sideFillDrain(uint32_t _seed)
+  	{
+      _seed = _seed >> 6;
+      
+      if(firstRender)
+      {
+        adafruitStrip.clear();
+        effectIndex = 0;
+        lastRender = _seed - 1;
+        filling = true;
+        firstRender = false;
+      }
+      
+      if(_seed > lastRender)
+      {
+        if(filling)
+        {
+          adafruitStrip.setPixelColor(effectIndex, effectColor);
+          adafruitStrip.setPixelColor(ledChipCount - effectIndex, effectColor);
+          effectIndex++;
+          if(effectIndex == ledChipCount / 2) filling = false;
+        }
+        else
+        {
+          adafruitStrip.setPixelColor(ledChipCount / 2 + effectIndex, 0);
+          adafruitStrip.setPixelColor(ledChipCount / 2 - effectIndex, 0);
+          effectIndex--;
+          if(effectIndex == 0) filling = true;
+        }
+        lastRender = _seed + 100;
+      }
+  	}
 
     // ------------------------------------------------------------------------------------------ SET CONFIG FUNCTIONS
     void setEffect(uint8_t _effect)
@@ -512,8 +584,10 @@ class Strip
       setSpeed(EEPROM.read(indexOfThisStrip * OFFSET_TO_NEXT_STRIP_DATA + SPEED_ADDRESS), true);
       setBrightness(EEPROM.read(indexOfThisStrip * OFFSET_TO_NEXT_STRIP_DATA + BRIGHTNESS_ADDRESS));
       setColor(EEPROMRead_uint32_t(indexOfThisStrip * OFFSET_TO_NEXT_STRIP_DATA + COLOR_ADDRESS));
-      Serial.print("LOADED VALUES FROM EEPROM FOR STRIP ");
-      Serial.println(indexOfThisStrip);
+      #ifdef VERBOSE_MODE
+        Serial.print("LOADED VALUES FROM EEPROM FOR STRIP ");
+        Serial.println(indexOfThisStrip);
+      #endif
       preEffectFunction();
     }
     
@@ -528,8 +602,10 @@ class Strip
       EEPROM.write(indexOfThisStrip * OFFSET_TO_NEXT_STRIP_DATA + BRIGHTNESS_ADDRESS, effectBrightness);
       EEPROMWrite_uint32_t(indexOfThisStrip * OFFSET_TO_NEXT_STRIP_DATA + COLOR_ADDRESS, effectColor);
       EEPROM.commit();
-      Serial.print("SAVED VALUES TO EEPROM FOR STRIP ");
-      Serial.println(indexOfThisStrip);
+      #ifdef VERBOSE_MODE
+        Serial.print("SAVED VALUES TO EEPROM FOR STRIP ");
+        Serial.println(indexOfThisStrip);
+      #endif
     }
 
     void setDefaultConfig()
@@ -538,8 +614,10 @@ class Strip
       setSpeed(200, false);
       setBrightness(150);
       setColor(0xFFFFFF);
-      Serial.print("DEFAULT CONFIG SET FOR STRIP ");
-      Serial.println(indexOfThisStrip);
+      #ifdef VERBOSE_MODE
+        Serial.print("DEFAULT CONFIG SET FOR STRIP ");
+        Serial.println(indexOfThisStrip);
+      #endif
       preEffectFunction();
     }
 
@@ -574,13 +652,24 @@ class Strip
         delete[] sinTable;
         sinTable = NULL;
       }
+      
+      if(effectCode == RANDOMFILL && litLEDs == NULL)
+      {
+        litLEDs = new bool[ledChipCount];
+      }
+      else if(effectCode != RANDOMFILL && litLEDs != NULL)
+      {
+        delete[] litLEDs;
+        litLEDs = NULL;
+      }
+
+
 
       
     }
 
     void afterNewConfigChecks()
     {
-      if(effectCode == METEOR){ effectDelay = constrain( effectDelay, 5, 125 );}
       if(effectCode == BOUNCINGBALL){ effectDelay = constrain( effectDelay, 5, 50 );}
       if(effectCode == FIRE){ effectDelay = constrain( effectDelay, 5, 200 );}
     }
@@ -595,6 +684,8 @@ class Strip
     uint8_t         effectDelay;
     uint8_t         effectBrightness;
     uint32_t        effectColor;
-    bool            renderable, firstRender;
+    uint16_t        effectIndex;      // keeps track of the index of the led each effect is at
+    bool            renderable, firstRender, filling;
+    uint32_t        lastRender;
     
 };

@@ -17,6 +17,9 @@ NTPClient timeClient(ntpUDP, "europe.pool.ntp.org", 7200, 60000);     // protoco
 // requires support on windows 10 which is not state of the art yet...
 //#define MDNS_ADDRESS "ESPI"
 
+// Verbose almost debug like mode
+//#define VERBOSE_MODE
+
 #define HEARTBEAT_PERIOD 120000 // in ms
 #ifdef HEARTBEAT_PERIOD
   uint32_t timer = HEARTBEAT_PERIOD;
@@ -69,7 +72,7 @@ void setup(void)
 
   // ------------------------------ WIFI
   while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
+    delay(1000);
     Serial.print(".");
   }
   Serial.println("");
@@ -177,21 +180,37 @@ void loop(void)
     
   }
   
-  #ifdef HEARTBEAT_PERIOD
-    if(millis() > timer)
-    {
-      timeClient.update();
-      timer = millis() + HEARTBEAT_PERIOD;
-      
+  if(millis() > timer)
+  {
+    // ------------------------------ BASIC HARTBEAT INFO
+    timeClient.update();
+    timer = millis() + HEARTBEAT_PERIOD;
+    
+    #ifdef VERBOSE_MODE
       Serial.print("Elapsed minutes since boot: ");
       Serial.println(millis()/60000);
       Serial.print("Time from NTP server: ");
       Serial.println(timeClient.getFormattedTime());
-      /* 
-      // All of a sudden started causing CPU crash after implementing EEPROM read on startup:/
-      Serial.print("Free bytes in RAM: ");
-      Serial.println(system_get_free_heap_size());
-      */
+    #endif
+    
+    /* 
+    // All of a sudden started causing CPU crash after implementing EEPROM read on startup:/
+    Serial.print("Free bytes in RAM: ");
+    Serial.println(system_get_free_heap_size());
+    */
+    
+    // ------------------------------ WIFI RECONNECT IN CASE LOST CONNECTION
+    if(WiFi.status() != WL_CONNECTED)
+    {
+      while (WiFi.status() != WL_CONNECTED) {
+        delay(1000);
+        Serial.print(".");
+      }
+      Serial.println("");
+      Serial.print("Successfully reconnected to ");
+      Serial.println(WIFI_SSID);
+      Serial.print("IP address is ");
+      Serial.println(WiFi.localIP());
     }
-   #endif
+  }
 }
