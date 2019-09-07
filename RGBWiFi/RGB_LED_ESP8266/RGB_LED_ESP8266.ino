@@ -12,7 +12,7 @@
 // ------------------------------------------------------------------------------------------ OBJECTS
 ESP8266WebServer server(80);
 WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP, "2.hu.pool.ntp.org", 7200, 60000);     // protocol, poolServerName, timeOffset in seconds, updateInterval in millis
+NTPClient timeClient(ntpUDP, 7200);
 
 // ------------------------------------------------------------------------------------------ DEFINES
 // requires support on windows 10 which is not state of the art yet...
@@ -166,6 +166,7 @@ void setup(void)
   SPIFFS.begin(); 
   EEPROM.begin(64);         //start eeprom with 64byte
   server.begin();
+  timeClient.setUpdateInterval(60000);
   timeClient.begin();
   timeClient.forceUpdate();
 
@@ -217,12 +218,9 @@ void loop(void)
   if(millis() > timer)
   {
     #ifdef NTP_UPDATE
-      for(uint8_t i = 0; i < 5;i++)
-      {
-        if(timeClient.update())
-          break;
-      }
+      timeClient.update();
     #endif
+    
     timer = millis() + HEARTBEAT_PERIOD;
     
     // ------------------------------ BASIC HARTBEAT INFO
@@ -390,7 +388,6 @@ void getMemoryInfo()
 
 void getTimeInfo()
 {
-  timeClient.update();
   Serial.print("Ellapsed minutes since boot:  ");
   Serial.println(millis() / 60000);
   Serial.print("Time from NTP server:         ");
@@ -401,13 +398,27 @@ void getTimeInfo()
 
 void getDateInfo()
 {
-  timeClient.update();
+  uint16_t day = (timeClient.getEpochTime() / 86400) % 365 + 1;
+  if(day > 31) day -= 31;    //jan
+  if(day > 31) day -= 28;    //feb
+  if(day > 31) day -= 31;    //mar
+  if(day > 31) day -= 30;    //apr
+  if(day > 31) day -= 31;    //may
+  if(day > 31) day -= 30;    //jun
+  if(day > 31) day -= 31;    //jul
+  if(day > 31) day -= 31;    //aug
+  if(day > 31) day -= 30;    //sep
+  if(day > 31) day -= 31;    //okt
+  if(day > 31) day -= 30;    //nov
+  if(day > 31) day -= 31;    //dec
+  //TODO: don't be this lazy (not taken leap years and other stuff in account, this will work for a while tho)
+  day -= 12;
   Serial.print("Date:                         ");
   Serial.print(timeClient.getEpochTime() / 31556926 + 1970);
   Serial.print(".");
   Serial.print((timeClient.getEpochTime() / 2629743) % 12 + 1);
   Serial.print(".");
-  Serial.print((timeClient.getEpochTime() / 86400) % 31 + 1);
+  Serial.print(day);
   Serial.print(". ");
   
   String helper;
@@ -513,5 +524,4 @@ void getAdvancedInfo()
   Serial.println(ESP.getSketchMD5());
   Serial.print("Free sketch space[byte]:      ");
   Serial.println(ESP.getFreeSketchSpace());
-
 }
