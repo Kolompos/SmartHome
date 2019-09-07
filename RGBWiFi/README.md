@@ -1,4 +1,6 @@
-WRITE IN ME NICE THINGS!
+
+Coppy the tools folder in the Arduino folder in the Documents folder.
+
 
 URL command syntax helper:
 ESPIP/command?1=1&2=200&3=100&4=150&5=150&6=150&7=150&11=0

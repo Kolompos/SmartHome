@@ -12,7 +12,7 @@
 // ------------------------------------------------------------------------------------------ OBJECTS
 ESP8266WebServer server(80);
 WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP, "europe.pool.ntp.org", 7200, 60000);     // protocol, poolServerName, timeOffset in seconds, updateInterval in millis
+NTPClient timeClient(ntpUDP, "2.hu.pool.ntp.org", 7200, 60000);     // protocol, poolServerName, timeOffset in seconds, updateInterval in millis
 
 // ------------------------------------------------------------------------------------------ DEFINES
 // requires support on windows 10 which is not state of the art yet...
@@ -188,8 +188,10 @@ void setup(void)
     {
       strips[index].setDefaultConfig();
     }
-
   }
+  Serial.println("Booted successfully");
+  getDateInfo();
+  getTimeInfo();
 }
 
 // ------------------------------------------------------------------------------------------ LOOP
@@ -210,7 +212,40 @@ void loop(void)
   {
     strips[index].render(seedGlobal);
   }
-
+  
+  // ------------------------------ HARTBEAT
+  if(millis() > timer)
+  {
+    #ifdef NTP_UPDATE
+      for(uint8_t i = 0; i < 5;i++)
+      {
+        if(timeClient.update())
+          break;
+      }
+    #endif
+    timer = millis() + HEARTBEAT_PERIOD;
+    
+    // ------------------------------ BASIC HARTBEAT INFO
+    #ifdef VERBOSE_MODE
+      getTimeInfo();
+      getMemoryInfo();
+    #endif
+    
+    // ------------------------------ WIFI RECONNECT IN CASE LOST CONNECTION
+    if(WiFi.status() != WL_CONNECTED)
+    {
+      Serial.println("WIFI CONNECTION LOST, RECONNECTING...");
+      WiFi.reconnect();
+      while (WiFi.status() != WL_CONNECTED)
+      {
+        delay(1000);
+        Serial.print(".");
+      }
+      Serial.println("");
+      getWifiInfo();
+    }
+  }
+  
   // ------------------------------ DEBUG AND MAINTENANCE
   if (Serial.available())
   {
@@ -228,6 +263,10 @@ void loop(void)
     else if (command == (uint8_t)'t')
     {
       getTimeInfo();
+    }
+    else if (command == (uint8_t)'d')
+    {
+      getDateInfo();
     }
     else if (command == (uint8_t)'u')
     {
@@ -299,42 +338,15 @@ void loop(void)
       Serial.println("-------------------------------------------------------------------------");
       Serial.println("Available commands, send the character of the command you wish to execute");
       Serial.println("'r' - restart the ESP");
-      Serial.println("'m' - print system_get_free_heap_size() (remaining SRAM)");
+      Serial.println("'m' - display memory stats");
       Serial.println("'t' - print the time of the ESP");
+      Serial.println("'d' - print the date of the ESP");
       Serial.println("'u' - print the generated URLs, also these are the active settings for the strips");
       Serial.println("'o' - set all strips to OFF effect");
       Serial.println("'n' - print network info");
       Serial.println("'f' - firmware upgrade, OTA mode on");
       Serial.println("'a' - advanced info on ESP");
       Serial.println("");
-    }
-  }
-  
-  if(millis() > timer)
-  {
-    #ifdef NTP_UPDATE
-      timeClient.update();
-    #endif
-    timer = millis() + HEARTBEAT_PERIOD;
-    
-    // ------------------------------ BASIC HARTBEAT INFO
-    #ifdef VERBOSE_MODE
-      getTimeInfo();
-      getMemoryInfo();
-    #endif
-    
-    // ------------------------------ WIFI RECONNECT IN CASE LOST CONNECTION
-    if(WiFi.status() != WL_CONNECTED)
-    {
-      Serial.println("WIFI CONNECTION LOST, RECONNECTING...");
-      WiFi.reconnect();
-      while (WiFi.status() != WL_CONNECTED)
-      {
-        delay(1000);
-        Serial.print(".");
-      }
-      Serial.println("");
-      getWifiInfo();
     }
   }
 }
@@ -368,29 +380,73 @@ void getMemoryInfo()
   
   ESP.getHeapStats(&freeMemory, &maxBlock, &fragmentation);
   Serial.println("ESP memory stats:");
-  Serial.print("  Free Heap Size: ");
+  Serial.print("  Free heap size[byte]:       ");
   Serial.println(freeMemory);
-  Serial.print("  Max Block Size: ");
+  Serial.print("  Max block size[byte]:       ");
   Serial.println(maxBlock);
-  Serial.print("  Fragmentation%: ");
+  Serial.print("  Fragmentation[%]:           ");
   Serial.println(fragmentation);
 }
 
 void getTimeInfo()
 {
-  Serial.print("Ellapsed minutes since boot: ");
-  Serial.println(millis()/60000);
-  Serial.print("Time from NTP server: ");
+  timeClient.update();
+  Serial.print("Ellapsed minutes since boot:  ");
+  Serial.println(millis() / 60000);
+  Serial.print("Time from NTP server:         ");
   Serial.println(timeClient.getFormattedTime());
+  Serial.print("Epoch from NTP server:        ");
+  Serial.println(timeClient.getEpochTime());
+}
+
+void getDateInfo()
+{
+  timeClient.update();
+  Serial.print("Date:                         ");
+  Serial.print(timeClient.getEpochTime() / 31556926 + 1970);
+  Serial.print(".");
+  Serial.print((timeClient.getEpochTime() / 2629743) % 12 + 1);
+  Serial.print(".");
+  Serial.print((timeClient.getEpochTime() / 86400) % 31 + 1);
+  Serial.print(". ");
+  
+  String helper;
+  switch(((timeClient.getEpochTime()  / 86400) + 3 ) % 7)
+  {
+    case 0:
+      helper = "Mon";
+      break;
+    case 1:
+      helper = "Tue";
+      break;
+    case 2:
+      helper = "Wed";
+      break;
+    case 3:
+      helper = "Thu";
+      break;
+    case 4:
+      helper = "Fri";
+      break;
+    case 5:
+      helper = "Sat";
+      break;
+    case 6:
+      helper = "Sun";
+      break;
+    default:
+      helper = "you messed up mate";
+  }
+  Serial.println(helper);
 }
 
 void getWifiInfo()
 {
   if (WiFi.status() == WL_CONNECTED)
   {
-    Serial.print("Connected to: ");
+    Serial.print("Connected to:                 ");
     Serial.println(WIFI_SSID);
-    Serial.print("IP address is: ");
+    Serial.print("IP address is:                ");
     Serial.println(WiFi.localIP());
   }
   else
@@ -406,57 +462,56 @@ void getAdvancedInfo()
     getWifiInfo();
     uint8_t macAddr[6];
     WiFi.macAddress(macAddr);
-    Serial.printf("MAC address: %02x:%02x:%02x:%02x:%02x:%02x\n", macAddr[0], macAddr[1], macAddr[2], macAddr[3], macAddr[4], macAddr[5]);
-    Serial.print("Subnet mask: ");
+    Serial.printf("MAC address:                  %02x:%02x:%02x:%02x:%02x:%02x\n", macAddr[0], macAddr[1], macAddr[2], macAddr[3], macAddr[4], macAddr[5]);
+    Serial.print("Subnet mask:                  ");
     Serial.println(WiFi.subnetMask());
-    Serial.print("Gateway IP: ");
+    Serial.print("Gateway IP:                   ");
     Serial.println(WiFi.gatewayIP());
-    Serial.print("DHCP hostname: ");
+    Serial.print("DHCP hostname:                ");
     Serial.println(WiFi.hostname());
-    Serial.print("RSSI[dB]: ");
+    Serial.print("RSSI[dB]:                     ");
     Serial.println(WiFi.RSSI());
-      
   }
   else
   {
     Serial.println("No info available, disconnected from WiFi");
   }
   // TODO convert to volt
-  Serial.print("3V3 supply rail at: ");
+  Serial.print("3V3 supply rail at:           ");
   Serial.println(ESP.getVcc());
-  Serial.print("Chip ID: ");
+  Serial.print("Chip ID:                      ");
   Serial.println(ESP.getChipId());
-  Serial.print("SDK version: ");
+  Serial.print("SDK version:                  ");
   Serial.println(ESP.getSdkVersion());
-  Serial.print("Core version: ");
+  Serial.print("Core version:                 ");
   Serial.println(ESP.getCoreVersion());
-  Serial.print("Full version: ");
+  Serial.print("Full version:                 ");
   Serial.println(ESP.getFullVersion());
-  Serial.print("Boot version: ");
+  Serial.print("Boot version:                 ");
   Serial.println(ESP.getBootVersion());
-  Serial.print("Boot mode: ");
+  Serial.print("Boot mode:                    ");
   Serial.println(ESP.getBootMode());
-  Serial.print("CPU frequency[MHz]: ");
+  Serial.print("CPU frequency[MHz]:           ");
   Serial.println(ESP.getCpuFreqMHz());
-  Serial.print("Flash chip ID: ");
+  Serial.print("Flash chip ID:                ");
   Serial.println(ESP.getFlashChipId());
-  Serial.print("Flash chip vendor ID: ");
+  Serial.print("Flash chip vendor ID:         ");
   Serial.println(ESP.getFlashChipVendorId());
-  Serial.print("Flash chip real size[byte]: ");
+  Serial.print("Flash chip real size[byte]:   ");
   Serial.println(ESP.getFlashChipRealSize());
-  Serial.print("Flash chip size[byte]: ");
+  Serial.print("Flash chip size[byte]:        ");
   Serial.println(ESP.getFlashChipSize());
-  Serial.print("Flash chip speed[HZ]: ");
+  Serial.print("Flash chip speed[HZ]:         ");
   Serial.println(ESP.getFlashChipSpeed());
-  Serial.print("Flash chip mode: ");
+  Serial.print("Flash chip mode:              ");
   Serial.println(ESP.getFlashChipMode());
-  Serial.print("Flash chip size by chip ID[byte]: ");
+  Serial.print("Flash chip size by ID[byte]:  ");
   Serial.println(ESP.getFlashChipSizeByChipId());
-  Serial.print("Sketch size[byte]: ");
+  Serial.print("Sketch size[byte]:            ");
   Serial.println(ESP.getSketchSize());
-  Serial.print("Sketch MD5: ");
+  Serial.print("Sketch MD5:                   ");
   Serial.println(ESP.getSketchMD5());
-  Serial.print("Free sketch space[byte]: ");
+  Serial.print("Free sketch space[byte]:      ");
   Serial.println(ESP.getFreeSketchSpace());
 
 }
