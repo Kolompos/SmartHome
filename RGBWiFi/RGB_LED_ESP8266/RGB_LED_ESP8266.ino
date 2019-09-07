@@ -166,7 +166,7 @@ void setup(void)
   SPIFFS.begin(); 
   EEPROM.begin(64);         //start eeprom with 64byte
   server.begin();
-  timeClient.setUpdateInterval(60000);
+  timeClient.setUpdateInterval(1440000);
   timeClient.begin();
   timeClient.forceUpdate();
 
