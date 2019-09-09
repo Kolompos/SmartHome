@@ -14,7 +14,8 @@
 #define RANDOMFILL	  9
 #define MIDDLEFILL	  10
 #define SIDEFILL	    11
-#define YINYANG       12
+#define COMBOFILL       12
+#define YINYANG       13
 
 // EFFECT DEFINES
 #define BALL_COUNT    3
@@ -113,6 +114,10 @@ class Strip
     		  case SIDEFILL:
             sideFillDrain(_seed); // Light up the strip starting from the sides, then reverse
             break;
+		  case COMBOFILL:
+		   sideFillDrain(_seed);
+		   middleFillDrain(_seed);
+		   break;
           case YINYANG:
             yinYang(_seed);
             break;
