@@ -44,6 +44,11 @@ bool handleFileRead(String _path, bool _hasArgs)      // send the right file to 
     
     server.sendHeader("Location", url, true);
     server.send ( 302, "text/plain", "");
+
+    #ifdef VERBOSE_MODE
+      Serial.println("Redirected to parametered index.html");
+    #endif
+    
     return true;
   }
   
@@ -51,8 +56,16 @@ bool handleFileRead(String _path, bool _hasArgs)      // send the right file to 
   if (SPIFFS.exists(_path))                              // If the file exists
   {                            
     File file = SPIFFS.open(_path, "r");                 // Open it
+    #ifdef VERBOSE_MODE
+      Serial.print("File ");
+      Serial.print(_path);
+      Serial.println(" opened");
+    #endif
     size_t sent = server.streamFile(file, contentType); // And send it to the client
     file.close();                                       // Then close the file again
+    #ifdef VERBOSE_MODE
+      Serial.println("File closed");
+    #endif
     return true;
   }
   
@@ -93,6 +106,9 @@ void handleCommand() {
 void handleNotFound() {
   if (!handleFileRead(server.uri(), server.args()?true:false))
   {
+    #ifdef VERBOSE_MODE
+      Serial.println("handleFileRead returned false");
+    #endif
     String message = "Command Not Found\n\n";
     message += "URI: ";
     message += server.uri();
@@ -105,5 +121,8 @@ void handleNotFound() {
       message += " " + server.argName(i) + ": " + server.arg(i) + "\n";
     }
     server.send(404, "text/plain", message);
+    #ifdef VERBOSE_MODE
+      Serial.println("Sent debug message to HTTP client");
+    #endif
   }
 }

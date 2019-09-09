@@ -3,22 +3,22 @@
 #include <ESP8266WebServer.h>
 #include <ESP8266mDNS.h>
 #include <EEPROM.h>
+#include <ArduinoOTA.h>
+#include <NTPClient.h>
+#include <WiFiUdp.h>
 #include "EEPROMstuff.h"
 #include <FS.h>
-#include <WiFiUdp.h>
-#include <NTPClient.h>
-#include <ArduinoOTA.h>
 
 // ------------------------------------------------------------------------------------------ OBJECTS
 ESP8266WebServer server(80);
-WiFiUDP ntpUDP;
-NTPClient timeClient(ntpUDP, 7200);
+WiFiUDP timeUDPclient;
+NTPClient timeClient(timeUDPclient, "europe.pool.ntp.org", 7200); //europe.pool.ntp.org
 
 // ------------------------------------------------------------------------------------------ DEFINES
 // requires support on windows 10 which is not state of the art yet...
 //#define MDNS_ADDRESS "ESPI"
 
-//#define VERBOSE_MODE
+#define VERBOSE_MODE
 
 #define HEARTBEAT_PERIOD 120000 // in ms
 
@@ -37,34 +37,9 @@ uint32_t timer = HEARTBEAT_PERIOD;
 
 bool isCommandValid;
 
+const char daysOfTheWeek[7][4] = {"SUN", "MON", "TUE", "WED", "THU", "FRI", "SAT"};
+
 // ------------------------------------------------------------------------------------------ IGNORED PART
-// Template contet for "IgnoredDefines.h"
-/* 
- * #define NTP_UPDATE
- *  
- * #define WIFI_SSID "---"
- * #define WIFI_PW  "---"
- * 
- * IPAddress staticIP(192,168,1,100);
- * IPAddress gateway(192,168,0,0);
- * IPAddress subnet(255,255,255,0);
- * 
- * // strips settings
- * #define NUMBER_OF_STRIPS                3
- * 
- * #define LOGO_PIN                        D4
- * #define LOGO_LED_COUNT                  14
- * 
- * #define FRAME_PIN                       D3
- * #define FRAME_LED_COUNT                 82
- * 
- * #define LAMP_PIN                        D2
- * #define LAMP_LED_COUNT                  22
- * 
- * #include "Strip.h"
- * Strip strips[NUMBER_OF_STRIPS] = { { LOGO_PIN,LOGO_LED_COUNT,0 } , { FRAME_PIN,FRAME_LED_COUNT,1 }, { LAMP_PIN,LAMP_LED_COUNT,2 } };
- * #include "Handles.h"
- * */
 #include "IgnoredDefines.h"
 
 // ------------------------------------------------------------------------------------------ SETUP
@@ -78,7 +53,8 @@ void setup(void)
   WiFi.setAutoReconnect(false);
   //TODO: implement sleep mode while we have trees left...
   WiFi.setSleepMode(WIFI_NONE_SLEEP);
-  WiFi.config(staticIP, gateway, subnet);
+  //Serial.println(WiFi.hostname("ESP_" + ESP.getChipId()) ? "Hostname changed" : "Hostname not changed" );
+  WiFi.config(staticIP, gateway, subnet, dns);
   WiFi.begin(WIFI_SSID, WIFI_PW);
   while (WiFi.status() != WL_CONNECTED)
   {
@@ -104,6 +80,19 @@ void setup(void)
   server.onNotFound(handleNotFound);
   server.on("/command", handleCommand);
   server.on("/ota", OTAModeOn);
+  server.on("/rst", []()
+  {
+    server.send(200, "text/plain", "RESTARTING IN 1 SEC");
+    Serial.println("RESTARTING IN 1 SEC");
+    delay(1000);
+    ESP.restart();
+  });
+  server.on("/time", []()
+  {
+    server.send(200, "text/plain", timeClient.getFormattedTime());
+    Serial.println("/time requested from Client");
+    Serial.println(timeClient.getFormattedTime());
+  });
 
   // ------------------------------ OTA
   ArduinoOTA.onStart([]() 
@@ -166,15 +155,15 @@ void setup(void)
   SPIFFS.begin(); 
   EEPROM.begin(64);         //start eeprom with 64byte
   server.begin();
-  timeClient.setUpdateInterval(60000);
+  timeClient.setUpdateInterval(100 * HEARTBEAT_PERIOD);
   timeClient.begin();
   timeClient.forceUpdate();
 
   // ------------------------------ EEPROM
   lastCommandEpochTick = EEPROMRead_uint32_t(LAST_COMMAND_EPOCH_ADDRESS);
-  if(lastCommandEpochTick + RETAIN_COMMAND_FOR > timeClient.getEpochTime())
+  if((lastCommandEpochTick + RETAIN_COMMAND_FOR > timeClient.getEpochTime()) && (lastCommandEpochTick < timeClient.getEpochTime()))
   {
-    // if command is valid
+    // if command is valid, meaning not older than RETAIN_COMMAND_FOR and not later than this moment(later occurs when red EEPROM was newer written before)
     isCommandValid = true;
     // load last command's parameters
     for(uint8_t index = 0; index < NUMBER_OF_STRIPS; index++)
@@ -201,7 +190,11 @@ void loop(void)
   #ifdef MDNS_ADDRESS
     MDNS.update();
   #endif
-
+  
+  #ifdef VERBOSE_MODE
+    //Serial.print('/');
+  #endif
+  //delay(10);
   server.handleClient();
 
   // TODO: decide to keep this or OTA mode
@@ -219,6 +212,7 @@ void loop(void)
   {
     #ifdef NTP_UPDATE
       timeClient.update();
+      checkAndForceUpdateTime();
     #endif
     
     timer = millis() + HEARTBEAT_PERIOD;
@@ -250,13 +244,17 @@ void loop(void)
     uint8_t command = Serial.read();
     if (command == (uint8_t)'r')
     {
-      Serial.println("Restart initiated! Restarting in 2 sec!");
-      delay(2000);
+      Serial.println("Restart initiated! Restarting in 1 sec!");
+      delay(1000);
       ESP.restart();
     }
     else if (command == (uint8_t)'m')
     {
      getMemoryInfo();
+    }
+    else if (command == (uint8_t)'c')
+    {
+      checkAndForceUpdateTime();
     }
     else if (command == (uint8_t)'t')
     {
@@ -281,9 +279,10 @@ void loop(void)
       for(uint8_t index = 0; index < NUMBER_OF_STRIPS; index++)
       {
         strips[index].setEffect(0);
+        strips[index].preEffectFunction();
         Serial.print("Strip number ");
         Serial.print(index);
-        Serial.print(" is set to OFF");
+        Serial.println(" is set to OFF");
       }
     }
     else if (command == (uint8_t)'n')
@@ -337,6 +336,7 @@ void loop(void)
       Serial.println("Available commands, send the character of the command you wish to execute");
       Serial.println("'r' - restart the ESP");
       Serial.println("'m' - display memory stats");
+      Serial.println("'c' - check and force update time");
       Serial.println("'t' - print the time of the ESP");
       Serial.println("'d' - print the date of the ESP");
       Serial.println("'u' - print the generated URLs, also these are the active settings for the strips");
@@ -412,45 +412,26 @@ void getDateInfo()
   if(day > 31) day -= 30;    //nov
   if(day > 31) day -= 31;    //dec
   //TODO: don't be this lazy (not taken leap years and other stuff in account, this will work for a while tho)
-  day -= 12;
+  day -= 12;    // doesnt really work
   Serial.print("Date:                         ");
   Serial.print(timeClient.getEpochTime() / 31556926 + 1970);
   Serial.print(".");
   Serial.print((timeClient.getEpochTime() / 2629743) % 12 + 1);
   Serial.print(".");
-  Serial.print(day);
-  Serial.print(". ");
-  
-  String helper;
-  switch(((timeClient.getEpochTime()  / 86400) + 3 ) % 7)
-  {
-    case 0:
-      helper = "Mon";
-      break;
-    case 1:
-      helper = "Tue";
-      break;
-    case 2:
-      helper = "Wed";
-      break;
-    case 3:
-      helper = "Thu";
-      break;
-    case 4:
-      helper = "Fri";
-      break;
-    case 5:
-      helper = "Sat";
-      break;
-    case 6:
-      helper = "Sun";
-      break;
-    default:
-      helper = "you messed up mate";
-  }
-  Serial.println(helper);
+  Serial.print(daysOfTheWeek[timeClient.getDay()]);
+  Serial.println(". ");
 }
 
+void checkAndForceUpdateTime()
+{
+  if(timeClient.getEpochTime() < 1546300800) // 2019.01.01 00:00:00
+  {
+    timeClient.forceUpdate();
+    Serial.println("Forced time update!");
+    Serial.println(timeClient.getEpochTime() < 1546300800 ? "Failure" : "Success");
+  }
+}
+    
 void getWifiInfo()
 {
   if (WiFi.status() == WL_CONNECTED)
