@@ -14,7 +14,7 @@
 #define RANDOMFILL	  9
 #define MIDDLEFILL	  10
 #define SIDEFILL	    11
-#define COMBOFILL       12
+#define COMBOFILL     12
 #define YINYANG       13
 
 // EFFECT DEFINES
@@ -64,19 +64,19 @@ class Strip
     
     void render(uint32_t _seed)
     {
-      if(renderable)
+      if(isRenderable)
       {
         _seed /= effectDelay;
         switch(effectCode)
         {
           case OFF:
             adafruitStrip.clear();
-            renderable = false;
+            isRenderable = false;
             break; 
           case STATIC:
             adafruitStrip.fill(effectColor, 0, ledChipCount);
             adafruitStrip.setBrightness( effectBrightness );
-            renderable = false;
+            isRenderable = false;
             break; 
           case BREATHE:
             adafruitStrip.fill(effectColor, 0, ledChipCount);
@@ -114,37 +114,50 @@ class Strip
     		  case SIDEFILL:
             sideFillDrain(_seed); // Light up the strip starting from the sides, then reverse
             break;
-		  case COMBOFILL:
-		   sideFillDrain(_seed);
-		   middleFillDrain(_seed);
-		   break;
+		      case COMBOFILL:
+            comboFill(_seed);          // the two abowe combined cycling one effect after the other
+		        break;
           case YINYANG:
             yinYang(_seed);
             break;
           default:  //when unconfigured set the leds off
             adafruitStrip.clear();
-            renderable = false;
+            isRenderable = false;
         }
+        //TODO:check if ws2812 lifespan increases with less serial communication
+        //if(isShowable)
+        //{
         adafruitStrip.show();
+        //  isShowable = false;
+        //}
       }
     }
     
     // ------------------------------------------------------------------------------------------ EFFECT FUNCTIONS
     // ------------------------------------------------------------------------------------------ rainbowEffect
+    uint8_t ij;
+    
     void rainbowEffect(uint32_t _seed)
     {
-      uint8_t j = (_seed >> 12) & 255;
-      uint8_t ij;
-      for(uint16_t i = 0; i < ledChipCount; i++)
+      _seed = _seed >> 10;
+      
+      if(_seed > lastRender)
       {
-        ij = 255 - ((i + j) & 255);
-        if(ij < 85)
-        adafruitStrip.setPixelColor(i, 255 - ij * 3, 0, ij * 3);
-        else if(ij < 170)
-        adafruitStrip.setPixelColor(i, 0, (ij - 85) * 3, 255 - (ij - 85) * 3);
-        else
-        adafruitStrip.setPixelColor(i, (ij -170) * 3, 255 - (ij -170) * 3, 0);
+        if(effectIndex > 254) effectIndex = 0;
+        for(uint16_t i = 0; i < ledChipCount; i++)
+        {
+          ij = 255 - ((i + effectIndex) & 255);
+          if(ij < 85)
+          adafruitStrip.setPixelColor(i, 255 - ij * 3, 0, ij * 3);
+          else if(ij < 170)
+          adafruitStrip.setPixelColor(i, 0, (ij - 85) * 3, 255 - (ij - 85) * 3);
+          else
+          adafruitStrip.setPixelColor(i, (ij -170) * 3, 255 - (ij -170) * 3, 0);
+        }
+        effectIndex++;
       }
+      // TODO: calibrate this offset
+      lastRender = _seed + 1000;
     }
     
     // ------------------------------------------------------------------------------------------ waveEffect
@@ -155,12 +168,12 @@ class Strip
     {
       _seed = _seed >> 2;
       
-      if(firstRender)
+      if(isFirstRender)
       {
         rgb[0] = effectColor >> 16;
         rgb[1] = effectColor >> 8;
         rgb[2] = effectColor;
-        firstRender = false;
+        isFirstRender = false;
       }
       
       // you can add more offset and modify the parameters 111 and 169, they are random
@@ -185,12 +198,12 @@ class Strip
     // ------------------------------------------------------------------------------------------ meteorRain
     void meteorRain(uint32_t _seed, uint8_t meteorSize, uint8_t meteorTrailDecay, boolean meteorRandomDecay) 
     {
-      if(firstRender)
+      if(isFirstRender)
       {
         adafruitStrip.clear();
         effectIndex = 0;
         lastRender = _seed - 1;
-        firstRender = false;
+        isFirstRender = false;
       }
       
       if(_seed > lastRender)
@@ -255,7 +268,7 @@ class Strip
       adafruitStrip.clear();
       _seed = _seed >> 8;
 
-      if(firstRender)
+      if(isFirstRender)
       {
         for (uint8_t i = 0 ; i < BALL_COUNT ; i++)
         {   
@@ -266,7 +279,7 @@ class Strip
           TimeSinceLastBounce[i] = 0;
           Dampening[i] = 0.90 - float(i)/pow(BALL_COUNT,2); 
         }
-        firstRender = false;
+        isFirstRender = false;
       }
       
       for (uint8_t i = 0 ; i < BALL_COUNT ; i++)
@@ -370,21 +383,21 @@ class Strip
     
     void randomFillDrain(uint32_t _seed)
     {
-      _seed = _seed >> 6;  // microseconds divided by 1024 is miliseconds
+      _seed = _seed >> 6;
       
-      if(firstRender)
+      if(isFirstRender)
       {
         adafruitStrip.clear();
         effectIndex = 0;
         memset(litLEDs, 0, ledChipCount);
         lastRender = _seed - 1;
-        filling = true;
-        firstRender = false;
+        isFilling = true;
+        isFirstRender = false;
       }
 
       if(_seed > lastRender)
       {
-        if(filling)
+        if(isFilling)
         {
           while(true)
           {
@@ -397,7 +410,7 @@ class Strip
               break;
             }
           }
-          if(effectIndex == ledChipCount) filling = false;
+          if(effectIndex == ledChipCount) isFilling = false;
         }
         else
         {
@@ -412,7 +425,7 @@ class Strip
               break;
             }
           }
-          if(effectIndex == 0) filling = true;
+          if(effectIndex == 0) isFilling = true;
         }
         lastRender = _seed + 100;
       }
@@ -424,82 +437,104 @@ class Strip
   	{
       _seed = _seed >> 6;
       
-      if(firstRender)
+      if(isFirstRender)
       {
         adafruitStrip.clear();
         effectIndex = 0;
         lastRender = _seed - 1;
-        filling = true;
-        firstRender = false;
+        isFilling = true;
+        isFirstRender = false;
       }
       
   	  if(_seed > lastRender)
       {
-        if(filling)
+        if(isFilling)
         {
           adafruitStrip.setPixelColor(ledChipCount / 2 + effectIndex, effectColor);
           adafruitStrip.setPixelColor(ledChipCount / 2 - effectIndex, effectColor);
           effectIndex++;
-          if(effectIndex == ledChipCount / 2) filling = false;
+          if(effectIndex == ledChipCount / 2) isFilling = false;
         }
         else
         {
           adafruitStrip.setPixelColor(effectIndex, 0);
           adafruitStrip.setPixelColor(ledChipCount - effectIndex, 0);
           effectIndex--;
-          if(effectIndex == 0) filling = true;
+          if(effectIndex == 0)
+          {
+            isFilling = true;
+            isHelper01 = true;
+          }
         }
         lastRender = _seed + 100;
       }
   	}
   	
   	// ------------------------------------------------------------------------------------------ sideFillDrain
-  	// Light up the strip starting from the sides
-  	void sideFillDrain(uint32_t _seed)
-  	{
+    // Light up the strip starting from the sides
+    void sideFillDrain(uint32_t _seed)
+    {
       _seed = _seed >> 6;
       
-      if(firstRender)
+      if(isFirstRender)
       {
         adafruitStrip.clear();
         effectIndex = 0;
         lastRender = _seed - 1;
-        filling = true;
-        firstRender = false;
+        isFilling = true;
+        isFirstRender = false;
       }
       
       if(_seed > lastRender)
       {
-        if(filling)
+        if(isFilling)
         {
           adafruitStrip.setPixelColor(effectIndex, effectColor);
           adafruitStrip.setPixelColor(ledChipCount - effectIndex, effectColor);
           effectIndex++;
-          if(effectIndex == ledChipCount / 2) filling = false;
+          if(effectIndex == ledChipCount / 2) isFilling = false;
         }
         else
         {
           adafruitStrip.setPixelColor(ledChipCount / 2 + effectIndex, 0);
           adafruitStrip.setPixelColor(ledChipCount / 2 - effectIndex, 0);
           effectIndex--;
-          if(effectIndex == 0) filling = true;
+          if(effectIndex == 0)
+          {
+            isFilling = true;
+            isHelper01 = false;
+          }
         }
         lastRender = _seed + 100;
       }
-  	}
+    }
+    
+    // ------------------------------------------------------------------------------------------ comboFill
+    // Light up the strip starting from the sides
+    void comboFill(uint32_t _seed)
+    {
+      if(isHelper01)
+      {
+        sideFillDrain(_seed);
+      }
+      else
+      {
+        middleFillDrain(_seed);
+      }
+    }
 
     // ------------------------------------------------------------------------------------------ yinYang
     void yinYang(uint32_t _seed)
     {
       _seed = _seed >> 6;
       
-      if(firstRender)
+      if(isFirstRender)
       {
         adafruitStrip.clear();
         effectIndex = 0;
         lastRender = _seed - 1;
-        filling = true;
-        firstRender = false;
+        isFilling = true;
+        isFirstRender = false;
       }
       
       if(_seed > lastRender)
@@ -653,8 +688,8 @@ class Strip
 
     void preEffectFunction()
     {
-      firstRender = true;
-      renderable = true;
+      isFirstRender = true;
+      isRenderable = true;
 
       // these are here to save memory
       // later on when technology goes by me and my old views, you could technically make these reserved the whole time... 
@@ -693,15 +728,17 @@ class Strip
         litLEDs = NULL;
       }
 
-
-
-      
     }
 
     void afterNewConfigChecks()
     {
       if(effectCode == BOUNCINGBALL){ effectDelay = constrain( effectDelay, 5, 50 );}
       if(effectCode == FIRE){ effectDelay = constrain( effectDelay, 5, 200 );}
+    }
+    
+    void resetLastRender()
+    {
+      lastRender = 0;
     }
     
   private: 
@@ -715,7 +752,7 @@ class Strip
     uint8_t         effectBrightness;
     uint32_t        effectColor;
     uint16_t        effectIndex;      // keeps track of the index of the led each effect is at
-    bool            renderable, firstRender, filling;
+    bool            isRenderable, isFirstRender, isFilling, isHelper01;
     uint32_t        lastRender;
     
 };

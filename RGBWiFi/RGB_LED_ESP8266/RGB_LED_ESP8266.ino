@@ -18,21 +18,21 @@ NTPClient timeClient(timeUDPclient, "europe.pool.ntp.org", 7200); //europe.pool.
 // requires support on windows 10 which is not state of the art yet...
 //#define MDNS_ADDRESS "ESPI"
 
-#define VERBOSE_MODE
+//#define VERBOSE_MODE
 
 #define HEARTBEAT_PERIOD 120000 // in ms
 
 // EEPROM
 #define RETAIN_COMMAND_FOR              86400   // in seconds
-#define LAST_COMMAND_EPOCH_ADDRESS      0
-#define EFFECT_ADDRESS                  4
-#define COLOR_ADDRESS                   5
-#define SPEED_ADDRESS                   9
-#define BRIGHTNESS_ADDRESS              10
-#define OFFSET_TO_NEXT_STRIP_DATA       10
+#define LAST_COMMAND_EPOCH_ADDRESS      0       // 4 byte
+#define EFFECT_ADDRESS                  4       // 1 byte
+#define COLOR_ADDRESS                   5       // 4 byte
+#define SPEED_ADDRESS                   9       // 1 byte
+#define BRIGHTNESS_ADDRESS              10      // 1 byte
+#define OFFSET_TO_NEXT_STRIP_DATA       10      // SUM 11 byte EEPROM / strip
 
 // ------------------------------------------------------------------------------------------ VARIABLES
-uint32_t lastCommandEpochTick, seedGlobal;
+uint32_t lastCommandEpochTick, seedGlobal, seedOverflowTeamFortress2;     // you know its way better ;)
 uint32_t timer = HEARTBEAT_PERIOD;
 
 bool isCommandValid;
@@ -192,12 +192,13 @@ void loop(void)
   #endif
   
   #ifdef VERBOSE_MODE
-    //Serial.print('/');
+    //Serial.print('/');    // spams '/' every loop
+    //delay(10);
   #endif
-  //delay(10);
+  
   server.handleClient();
 
-  // TODO: decide to keep this or OTA mode
+  // TODO: decide to keep this or OTAModeOn()
   ArduinoOTA.handle();
   
   seedGlobal = micros();
@@ -207,15 +208,25 @@ void loop(void)
     strips[index].render(seedGlobal);
   }
   
-  // ------------------------------ HARTBEAT
+  // -------------------------------------------------------------------------- HARTBEAT
   if(millis() > timer)
   {
+    // ------------------------------ OVERFLOW GUARDS
+    if(millis() > 4276800000) ESP.restart();  //49,5 days, almost a millis overflow (max is 4294967295)
+    timer = millis() + HEARTBEAT_PERIOD;      //based on line abowe HB_PERIOD can not be greater than 18167295 (~5hours)
+    if(micros() < seedOverflowTeamFortress2)
+    {
+      for(uint8_t index = 0; index < NUMBER_OF_STRIPS; index++)
+      {
+        strips[index].resetLastRender();
+      }
+    }
+    seedOverflowTeamFortress2 = micros();
+    
     #ifdef NTP_UPDATE
       timeClient.update();
       checkAndForceUpdateTime();
     #endif
-    
-    timer = millis() + HEARTBEAT_PERIOD;
     
     // ------------------------------ BASIC HARTBEAT INFO
     #ifdef VERBOSE_MODE
@@ -238,7 +249,7 @@ void loop(void)
     }
   }
   
-  // ------------------------------ DEBUG AND MAINTENANCE
+  // -------------------------------------------------------------------------- SERIAL COMMAND LINE
   if (Serial.available())
   {
     uint8_t command = Serial.read();
@@ -292,7 +303,6 @@ void loop(void)
       {
         case WL_CONNECTED:
           Serial.println("WL_CONNECTED");
-          getWifiInfo();
           break;
         case WL_NO_SHIELD:
           Serial.println("WL_NO_SHIELD");
@@ -368,6 +378,7 @@ void OTAModeOn()
 
 void getMemoryInfo()
 {
+  Serial.println("ESP memory stats:");
   uint32_t freeMemory;
   uint16_t maxBlock;
   uint8_t fragmentation;
@@ -377,7 +388,6 @@ void getMemoryInfo()
   //fragmentation = ESP.getHeapFragmentation();
   
   ESP.getHeapStats(&freeMemory, &maxBlock, &fragmentation);
-  Serial.println("ESP memory stats:");
   Serial.print("  Free heap size[byte]:       ");
   Serial.println(freeMemory);
   Serial.print("  Max block size[byte]:       ");
@@ -388,35 +398,23 @@ void getMemoryInfo()
 
 void getTimeInfo()
 {
-  Serial.print("Ellapsed minutes since boot:  ");
+  Serial.println("Time Info:");
+  Serial.print("  Ellapsed mins. since boot:  ");
   Serial.println(millis() / 60000);
-  Serial.print("Time from NTP server:         ");
+  Serial.print("  Time from NTP server:       ");
   Serial.println(timeClient.getFormattedTime());
-  Serial.print("Epoch from NTP server:        ");
+  Serial.print("  Epoch from NTP server:      ");
   Serial.println(timeClient.getEpochTime());
 }
 
 void getDateInfo()
 {
-  uint16_t day = (timeClient.getEpochTime() / 86400) % 365 + 1;
-  if(day > 31) day -= 31;    //jan
-  if(day > 31) day -= 28;    //feb
-  if(day > 31) day -= 31;    //mar
-  if(day > 31) day -= 30;    //apr
-  if(day > 31) day -= 31;    //may
-  if(day > 31) day -= 30;    //jun
-  if(day > 31) day -= 31;    //jul
-  if(day > 31) day -= 31;    //aug
-  if(day > 31) day -= 30;    //sep
-  if(day > 31) day -= 31;    //okt
-  if(day > 31) day -= 30;    //nov
-  if(day > 31) day -= 31;    //dec
-  //TODO: don't be this lazy (not taken leap years and other stuff in account, this will work for a while tho)
-  day -= 12;    // doesnt really work
+  // TODO: print date in number format
   Serial.print("Date:                         ");
   Serial.print(timeClient.getEpochTime() / 31556926 + 1970);
   Serial.print(".");
-  Serial.print((timeClient.getEpochTime() / 2629743) % 12 + 1);
+  uint8_t month = (timeClient.getEpochTime() / 2629743) % 12 + 1;
+  Serial.print((month < 10 ) ? "0" + String(month) : month);
   Serial.print(".");
   Serial.print(daysOfTheWeek[timeClient.getDay()]);
   Serial.println(". ");
@@ -433,12 +431,13 @@ void checkAndForceUpdateTime()
 }
     
 void getWifiInfo()
-{
+{ 
+  Serial.println("Wifi Info:");
   if (WiFi.status() == WL_CONNECTED)
   {
-    Serial.print("Connected to:                 ");
+    Serial.print("  Connected to:               ");
     Serial.println(WIFI_SSID);
-    Serial.print("IP address is:                ");
+    Serial.print("  IP address is:              ");
     Serial.println(WiFi.localIP());
   }
   else
